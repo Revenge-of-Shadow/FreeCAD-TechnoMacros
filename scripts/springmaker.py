@@ -238,114 +238,118 @@ def makeCircle(doc, radius, wire_diameter = 0.5):
 
 
 if(form.success):
-    ##  Get input
-    wire_diameter = float(form.ti_wd.text())
-    radius = float(form.ti_r.text())
-    radius = radius - wire_diameter/2
-    height = float(form.ti_h.text())
-    base_height = float(form.ti_bh.text())
-    base_rotation = base_height/wire_diameter*360
-
-    revolutions = float(form.ti_re.text())
-    pitch = float(form.ti_p.text())
-    
-      
-    ##  Input values end 
-
-
     doc = App.activeDocument()
-    
-    links = []
 
-    ##  Hooked spring
-    if(form.springtype == "hook"):
-        center_height = height-(radius+base_height)*2
-        if(form.rotmode == "revolutions"):
-            pitch = center_height / revolutions
-        center_rotation = center_height/pitch*360
-
-        lower_hook = makeHook(doc, radius, wire_diameter)
-        lower_hook.Placement = App.Placement(App.Vector(0,0,radius),App.Rotation(App.Vector(-1,0,0),90))
-        lower_hook.Label = "Lower hook"
-        links.append(lower_hook)
-
-        lower_placement = App.Placement(App.Vector(0, 0, radius), 
-                                        App.Rotation(0, 0, 0))
-        center_placement = App.Placement(App.Vector(0, 0, radius+base_height), 
-                                         App.Rotation(base_rotation, 0, 0))
-        upper_placement = App.Placement(App.Vector(0, 0, radius+base_height+center_height), 
-                                        App.Rotation(base_rotation+center_rotation, 0, 0))
-
-        upper_hook = makeHook(doc, radius, wire_diameter)
-        upper_hook.Placement = App.Placement(App.Vector(0, 0, radius+base_height+center_height+base_height), 
-                                             App.Rotation(base_rotation+center_rotation+base_rotation, 0, 90), App.Vector(0,0,0))
-        upper_hook.Label = "Upper hook"
-        links.append(upper_hook)
-
-    ##  Circle end
-    elif(form.springtype == "circle"):
-        center_height = height-(radius*2+base_height)*2
-        if(form.rotmode == "revolutions"):
-            pitch = center_height / revolutions
-        center_rotation = center_height/pitch*360
-
-        lower_circle = makeCircle(doc, radius, wire_diameter)
-        lower_circle.Placement = App.Placement(App.Vector(radius,0,radius),
-                                               App.Rotation(90,0,90))
-        lower_circle.Label = "Lower circle"
-        links.append(lower_circle)
-
-        lower_placement = App.Placement(App.Vector(0, 0, radius*2), 
-                                        App.Rotation(0, 0, 0))
-        center_placement = App.Placement(App.Vector(0, 0, radius*2+base_height), 
-                                         App.Rotation(base_rotation, 0, 0))
-        upper_placement = App.Placement(App.Vector(0, 0, radius*2+base_height+center_height), 
-                                        App.Rotation(base_rotation+center_rotation, 0, 0))
-
-        upper_circle = makeCircle(doc, radius, wire_diameter)
-        upper_circle.Placement = App.Placement(App.Vector(radius*math.cos((base_rotation+center_rotation+base_rotation)/180*math.pi), radius*math.sin((base_rotation+center_rotation+base_rotation)/180*math.pi), radius*2+base_height+center_height+base_height+radius), 
-                                               App.Rotation(base_rotation+center_rotation+base_rotation+90, 0, 90), 
-                                               App.Vector(0,0,0))
-        upper_circle.Label = "Upper circle"
-        links.append(upper_circle)
-        
-    ##  Flat-end spring as default
+    if(doc is None):
+        QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
     else:
-        center_height = height-(base_height)*2
-        center_rotation = center_height/pitch*360
+        links = []
 
-        lower_placement = App.Placement(App.Vector(0, 0, 0), App.Rotation(0, 0, 0))
-        center_placement = App.Placement(App.Vector(0, 0, base_height), App.Rotation(base_rotation, 0, 0))
-        upper_placement = App.Placement(App.Vector(0, 0, base_height+center_height), App.Rotation(base_rotation+center_rotation, 0, 0))
-    ##  Spring end creation end
-    
+        ##  Get input
+        wire_diameter = float(form.ti_wd.text())
+        radius = float(form.ti_r.text())
+        radius = radius - wire_diameter/2
+        height = float(form.ti_h.text())
+        base_height = float(form.ti_bh.text())
+        base_rotation = base_height/wire_diameter*360
 
-    ##  Spring center segment (common for all spring types)
-    center = makeHelix(doc, center_height, pitch, radius, wire_diameter)
-    center.Placement = center_placement
-    center.Label = "Central segment"
-    links.append(center) 
-    ##  Spring center end
-    
-    
-    ##  If possible, add spring base segments
-    if(base_height >= wire_diameter):
-        lower = makeHelix(doc, base_height, wire_diameter, radius, wire_diameter)
-        lower.Placement = lower_placement
-        lower.Label = "Lower segment"
-        links.append(lower)
-        upper = makeHelix(doc, base_height, wire_diameter, radius, wire_diameter)
-        upper.Placement = upper_placement
-        upper.Label = "Upper segment"
-        links.append(upper)
-    ##  Spring base segments end
+        revolutions = float(form.ti_re.text())
+        pitch = float(form.ti_p.text())
+        
+          
+        ##  Input values end 
 
 
-    compound = doc.addObject("Part::Compound", "springCompound")
-    compound.Links = links 
+        
+        ##  Hooked spring
+        if(form.springtype == "hook"):
+            center_height = height-(radius+base_height)*2
+            if(form.rotmode == "revolutions"):
+                pitch = center_height / revolutions
+            center_rotation = center_height/pitch*360
+
+            lower_hook = makeHook(doc, radius, wire_diameter)
+            lower_hook.Placement = App.Placement(App.Vector(0,0,radius),App.Rotation(App.Vector(-1,0,0),90))
+            lower_hook.Label = "Lower hook"
+            links.append(lower_hook)
+
+            lower_placement = App.Placement(App.Vector(0, 0, radius), 
+                                            App.Rotation(0, 0, 0))
+            center_placement = App.Placement(App.Vector(0, 0, radius+base_height), 
+                                             App.Rotation(base_rotation, 0, 0))
+            upper_placement = App.Placement(App.Vector(0, 0, radius+base_height+center_height), 
+                                            App.Rotation(base_rotation+center_rotation, 0, 0))
+
+            upper_hook = makeHook(doc, radius, wire_diameter)
+            upper_hook.Placement = App.Placement(App.Vector(0, 0, radius+base_height+center_height+base_height), 
+                                                 App.Rotation(base_rotation+center_rotation+base_rotation, 0, 90), App.Vector(0,0,0))
+            upper_hook.Label = "Upper hook"
+            links.append(upper_hook)
+
+        ##  Circle end
+        elif(form.springtype == "circle"):
+            center_height = height-(radius*2+base_height)*2
+            if(form.rotmode == "revolutions"):
+                pitch = center_height / revolutions
+            center_rotation = center_height/pitch*360
+
+            lower_circle = makeCircle(doc, radius, wire_diameter)
+            lower_circle.Placement = App.Placement(App.Vector(radius,0,radius),
+                                                   App.Rotation(90,0,90))
+            lower_circle.Label = "Lower circle"
+            links.append(lower_circle)
+
+            lower_placement = App.Placement(App.Vector(0, 0, radius*2), 
+                                            App.Rotation(0, 0, 0))
+            center_placement = App.Placement(App.Vector(0, 0, radius*2+base_height), 
+                                             App.Rotation(base_rotation, 0, 0))
+            upper_placement = App.Placement(App.Vector(0, 0, radius*2+base_height+center_height), 
+                                            App.Rotation(base_rotation+center_rotation, 0, 0))
+
+            upper_circle = makeCircle(doc, radius, wire_diameter)
+            upper_circle.Placement = App.Placement(App.Vector(radius*math.cos((base_rotation+center_rotation+base_rotation)/180*math.pi), radius*math.sin((base_rotation+center_rotation+base_rotation)/180*math.pi), radius*2+base_height+center_height+base_height+radius), 
+                                                   App.Rotation(base_rotation+center_rotation+base_rotation+90, 0, 90), 
+                                                   App.Vector(0,0,0))
+            upper_circle.Label = "Upper circle"
+            links.append(upper_circle)
+            
+        ##  Flat-end spring as default
+        else:
+            center_height = height-(base_height)*2
+            center_rotation = center_height/pitch*360
+
+            lower_placement = App.Placement(App.Vector(0, 0, 0), App.Rotation(0, 0, 0))
+            center_placement = App.Placement(App.Vector(0, 0, base_height), App.Rotation(base_rotation, 0, 0))
+            upper_placement = App.Placement(App.Vector(0, 0, base_height+center_height), App.Rotation(base_rotation+center_rotation, 0, 0))
+        ##  Spring end creation end
+        
+
+        ##  Spring center segment (common for all spring types)
+        center = makeHelix(doc, center_height, pitch, radius, wire_diameter)
+        center.Placement = center_placement
+        center.Label = "Central segment"
+        links.append(center) 
+        ##  Spring center end
+        
+        
+        ##  If possible, add spring base segments
+        if(base_height >= wire_diameter):
+            lower = makeHelix(doc, base_height, wire_diameter, radius, wire_diameter)
+            lower.Placement = lower_placement
+            lower.Label = "Lower segment"
+            links.append(lower)
+            upper = makeHelix(doc, base_height, wire_diameter, radius, wire_diameter)
+            upper.Placement = upper_placement
+            upper.Label = "Upper segment"
+            links.append(upper)
+        ##  Spring base segments end
 
 
-    doc.recompute()
+        compound = doc.addObject("Part::Compound", "springCompound")
+        compound.Links = links 
+
+
+        doc.recompute()
 
 '''                             Modelling code end                          '''
 ##===========================================================================##
