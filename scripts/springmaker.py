@@ -8,6 +8,10 @@ class GuiClass(QtGui.QDialog):
         super(GuiClass, self).__init__()
         self.initUI()
 
+    def callZeroWarn(self):
+        QtGui.QMessageBox.information(None, "Nyaa",
+                                      "Wire diameter, radius and height must be non-zero.")
+
     def callPitchWarn(self):
         QtGui.QMessageBox.information(None, "Nyanya", 
                                      "Pitch value is too low."+
@@ -19,9 +23,9 @@ class GuiClass(QtGui.QDialog):
     def callHeightWarn(self):
         QtGui.QMessageBox.information(None, "Nyannya",
                                       "Whole spring height must be:"+
-                                      "\n- bigger than two times base length (but base length can be zero!);"+
-                                      "\n- bigger than two times base length and two times radius in case of hook mode;"+
-                                      "\n- bigger than two times base length and four times radius in case of cirlce mode.")
+                                      "\n- bigger than two times base height (but base height can be zero!);"+
+                                      "\n- bigger than two times base height and two times radius in case of hook mode;"+
+                                      "\n- bigger than two times base height and four times radius in case of cirlce mode.")
 
     ##  Event handler methods
     def onFlatChosen(self):
@@ -45,12 +49,14 @@ class GuiClass(QtGui.QDialog):
 
     def tryQuit(self, success):
         if(success):
+            if(float(self.ti_wd.text()) == 0 or float(self.ti_h.text()) == 0 or float(self.ti_r.text()) == 0):
+                self.callZeroWarn()
+                return
             if((self.springtype == "circle" and (float(self.ti_h.text()) < (float(self.ti_bh.text())*2+float(self.ti_r.text())*4)))
                 or (self.springtype == "hook" and (float(self.ti_h.text()) < (float(self.ti_bh.text())*2+float(self.ti_r.text())*2)))
                    or(self.springtype == "flat" and (float(self.ti_h.text()) < (float(self.ti_bh.text())*2)))):
                 self.callHeightWarn()
                 return
-
             if(self.rotmode == "pitch" and float(self.ti_p.text()) < float(self.ti_wd.text())):
                 self.callPitchWarn()
                 return
@@ -78,12 +84,14 @@ class GuiClass(QtGui.QDialog):
         self.setWindowTitle("Nya")
 
         ##  Labels and inputs.
-        validator_double = QtGui.QDoubleValidator()
+        dv = QtGui.QDoubleValidator()
+        dv_non_negative = QtGui.QDoubleValidator()
+        dv_non_negative.setRange(0, 100000)
 
         self.l_wd = QtGui.QLabel("Wire diameter [mm]:", self)
         self.l_wd.move(20, 20) 
         self.ti_wd = QtGui.QLineEdit(self)
-        self.ti_wd.setValidator(validator_double)
+        self.ti_wd.setValidator(dv_non_negative)
         self.ti_wd.setText("0.5")
         self.ti_wd.setFixedWidth(80)
         self.ti_wd.move(220, 20)
@@ -91,7 +99,7 @@ class GuiClass(QtGui.QDialog):
         self.l_h = QtGui.QLabel("Height [mm]:", self)
         self.l_h.move(20, 70)
         self.ti_h = QtGui.QLineEdit(self)
-        self.ti_h.setValidator(validator_double)
+        self.ti_h.setValidator(dv_non_negative)
         self.ti_h.setText("30")
         self.ti_h.setFixedWidth(80)
         self.ti_h.move(220, 70)
@@ -99,7 +107,7 @@ class GuiClass(QtGui.QDialog):
         self.l_bh = QtGui.QLabel("Base height [mm]:", self)
         self.l_bh.move(20, 120)
         self.ti_bh = QtGui.QLineEdit(self)
-        self.ti_bh.setValidator(validator_double)
+        self.ti_bh.setValidator(dv_non_negative)
         self.ti_bh.setText("2")
         self.ti_bh.setFixedWidth(80)
         self.ti_bh.move(220, 120)
@@ -107,7 +115,7 @@ class GuiClass(QtGui.QDialog):
         self.l_r = QtGui.QLabel("Radius [mm]:", self)
         self.l_r.move(20, 170)
         self.ti_r = QtGui.QLineEdit(self)
-        self.ti_r.setValidator(validator_double)
+        self.ti_r.setValidator(dv_non_negative)
         self.ti_r.setText("2.5")
         self.ti_r.setFixedWidth(80)
         self.ti_r.move(220, 170)
@@ -120,7 +128,7 @@ class GuiClass(QtGui.QDialog):
         self.grp_pitch.addButton(self.rb_p)
         self.rb_p.toggle()
         self.ti_p = QtGui.QLineEdit(self)
-        self.ti_p.setValidator(validator_double)
+        self.ti_p.setValidator(dv)
         self.ti_p.setText("3")
         self.ti_p.setFixedWidth(80)
         self.ti_p.move(220, 220)
@@ -130,10 +138,11 @@ class GuiClass(QtGui.QDialog):
         self.rb_re.move(20, 270)
         self.grp_pitch.addButton(self.rb_re)
         self.ti_re = QtGui.QLineEdit(self)
-        self.ti_re.setValidator(validator_double)
+        self.ti_re.setValidator(dv)
         self.ti_re.setText("8")
         self.ti_re.setFixedWidth(80)
         self.ti_re.move(220, 270)
+        self.ti_re.setEnabled(False)
         ##  Labels and inputs end.
 
         ##  Additional options.
