@@ -126,3 +126,73 @@ form.exec()
 '''               Graphical user interface end                '''
 '''==========================================================='''
 
+'''==========================================================='''
+'''                     Modelling code                        '''
+##  FreeCAD object functions
+def makeGearWheel(doc, o_radius, i_radius, tooth_amount, tooth_h, extrusion):
+    body = doc.addObject('PartDesign::Body', 'gearBody')
+
+    sketch = body.newObject('Sketcher::SketchObject', 'gearSketch')
+    sketch.AttachmentSupport = (doc.getObject('XY_Plane'), [''])
+    sketch.MapMode = 'FlatFace'
+    
+    geoList = []
+    geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), i_radius))
+    sketch.addGeometry(geoList, False)
+    del geoList
+
+    
+
+    points = []
+    for i in range(tooth_amount*2):
+        angle = math.pi*2/(tooth_amount*2)*i
+        
+        if(i % 2 == 1):
+            dist = o_radius - tooth_h
+        else:
+            dist = o_radius
+        points.append(App.Vector(math.cos(angle)*dist, math.sin(angle)*dist, 0))
+
+    #   I am sorry for this. I could not find any documentation to make it pretty.
+    for i in range(len(points)-1):
+        lastGeoId = len(sketch.Geometry)
+        geoList = []
+        geoList.append(Part.LineSegment(points[i], points[i+1]))
+        sketch.addGeometry(geoList, False)
+        del geoList
+
+    lastGeoId = len(sketch.Geometry)
+    geoList = []
+    geoList.append(Part.LineSegment(points[0], points[len(points)-1]))
+    sketch.addGeometry(geoList, False)
+    del geoList
+
+    if(extrusion == 0):
+        return
+
+    pad = body.newObject('PartDesign::Pad', 'gearPad')
+    pad.Profile = (sketch, [''])
+    pad.Length = abs(extrusion)
+    pad.ReferenceAxis = (sketch, ['N_Axis'])
+    pad.Reversed = (extrusion < 0)
+
+    
+
+##  FreeCAD object functions end
+
+if(form.success):
+    doc = App.activeDocument()
+    if(doc is None):
+        QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
+    else:
+        ##  Processing
+        o_radius = form.ds_or.value()
+        i_radius = form.ds_ir.value()
+        tooth_amount = form.is_at.value()
+        tooth_h = form.ds_th.value()
+        extrusion = form.ds_e.value()
+        
+        makeGearWheel(doc, o_radius, i_radius, tooth_amount, tooth_h, extrusion)
+
+        ##  Processing end
+        doc.recompute()
