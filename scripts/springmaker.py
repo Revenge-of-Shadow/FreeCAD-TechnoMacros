@@ -13,7 +13,6 @@ class GuiClass(QtGui.QDialog):
 
         def focusOutEvent(self, event):
             self.focusSignal.emit()
-            print("Should be second.")
             super(QtGui.QDoubleSpinBox, self).focusOutEvent(event)
 
 
@@ -85,7 +84,6 @@ class GuiClass(QtGui.QDialog):
     ### Update handlers end
     def onValueChanged(self):
         self.warnAllowed = True
-        print("Should be first.")
 
     def onFlatChosen(self):
         self.springtype = "flat"
