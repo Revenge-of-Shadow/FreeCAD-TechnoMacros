@@ -28,16 +28,7 @@ class GuiClass(QtGui.QDialog):
         box.setSingleStep(step)
         box.setValue(default)
 
-    def onValueChanged(self):
-        #   outer radius <= tooth height + inner radius
-        if(self.ds_or.value() <= (self.ds_th.value()+self.ds_ir.value())):
-            self.is_tw.setValue(0)
-        else:
-            self.is_tw.setValue(math.tan(math.pi*2/float(self.is_at.value()))*(self.ds_or.value()-self.ds_th.value())*2)
-
-
     def tryQuit(self, success):
-        self.success = False
         if(success):
             if(self.ds_or.value() <= (self.ds_th.value()+self.ds_ir.value())):
                 self.callInformation()
@@ -47,6 +38,13 @@ class GuiClass(QtGui.QDialog):
     ## Utility functions end
     
     ##  Event handling
+    def onValueChanged(self):
+        #   outer radius <= tooth height + inner radius
+        if(self.ds_or.value() <= (self.ds_th.value()+self.ds_ir.value())):
+            self.is_tw.setValue(0)
+        else:
+            self.is_tw.setValue(math.tan(math.pi*2/float(self.is_at.value()))*(self.ds_or.value()-self.ds_th.value())*2)
+
     def onOk(self):
         self.tryQuit(True)
 
@@ -56,6 +54,7 @@ class GuiClass(QtGui.QDialog):
     
 
     def initUI(self):
+        self.success = False
         self.setGeometry(250, 250, 320, 400)
         self.setFixedSize(320, 480)
         self.setWindowTitle("Nya")

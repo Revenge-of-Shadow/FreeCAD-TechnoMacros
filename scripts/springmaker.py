@@ -8,70 +8,112 @@ class GuiClass(QtGui.QDialog):
         super(GuiClass, self).__init__()
         self.initUI()
 
-    def callZeroWarn(self):
-        QtGui.QMessageBox.information(None, "Nyaa",
-                                      "Wire diameter, radius and height must be non-zero.")
+    class focusSpinBox(QtGui.QDoubleSpinBox):
+        focusSignal = QtCore.Signal()
 
-    def callPitchWarn(self):
-        QtGui.QMessageBox.information(None, "Nyanya", 
-                                     "Pitch value is too low."+
-                                     "\nPitch value must be above the wire diameter,"+
-                                     "\nsince distance between loops must exist.")
-    def callRevolutionsWarn(self):
-        QtGui.QMessageBox.information(None, "Nya nya",
-                                      "Amount of spring revolutions can not be equal to zero.")
-    def callHeightWarn(self):
-        QtGui.QMessageBox.information(None, "Nyannya",
+        def focusOutEvent(self, event):
+            self.focusSignal.emit()
+            print("Should be second.")
+            super(QtGui.QDoubleSpinBox, self).focusOutEvent(event)
+
+
+    ##  Error "handling"
+    def callInformation(self):
+        if(self.warnAllowed):
+            self.warnAllowed = False
+            QtGui.QMessageBox.information(None, "Nyaa",
                                       "Whole spring height must be:"+
                                       "\n- bigger than two times base height (but base height can be zero!);"+
                                       "\n- bigger than two times base height and two times radius in case of hook mode;"+
-                                      "\n- bigger than two times base height and four times radius in case of cirlce mode.")
+                                      "\n- bigger than two times base height and four times radius in case of circle mode."+
+                                      "\n\nWire diameter, radius and height must be non-zero."+
+                                      "\n\nPitch value must be above the wire diameter."+
+                                      "\n\nAmount of spring revolutions can not be equal to zero."
+                                      )
 
-    ##  Event handler methods
-    def onFlatChosen(self):
-        self.springtype = "flat"
-
-    def onHookChosen(self):
-        self.springtype = "hook"
-
-    def onCircleChosen(self):
-        self.springtype = "circle"
-
-    def onPitchChosen(self):
-        self.rotmode = "pitch"
-        self.ti_p.setEnabled(True)
-        self.ti_re.setEnabled(False)
-
-    def onRevolutionsChosen(self):
-        self.rotmode = "revolutions"
-        self.ti_re.setEnabled(True)
-        self.ti_p.setEnabled(False)
+    def areValuesBad(self):
+        return (self.ds_wd.value() == 0 or 
+            self.ds_h.value() == 0 or 
+            self.ds_r.value() == 0 or
+            self.ds_re.value() == 0 or
+            self.ds_ch.value() <= 0 or 
+            self.ds_p.value() - self.ds_wd.value() <= 0 or
+            self.ds_ch.value()/self.ds_re.value() < self.ds_wd.value())
+    ##  Error "handling" end
+    ##  Utility functions
+    def setupSpinBox(self, box, max, min = 0, step = 1, default = 0):
+        box.setRange(min, max)
+        box.setSingleStep(step)
+        box.setValue(default)
 
     def tryQuit(self, success):
         if(success):
-            if(float(self.ti_wd.text()) == 0 or float(self.ti_h.text()) == 0 or float(self.ti_r.text()) == 0):
-                self.callZeroWarn()
-                return
-            if((self.springtype == "circle" and (float(self.ti_h.text()) < (float(self.ti_bh.text())*2+float(self.ti_r.text())*4)))
-                or (self.springtype == "hook" and (float(self.ti_h.text()) < (float(self.ti_bh.text())*2+float(self.ti_r.text())*2)))
-                   or(self.springtype == "flat" and (float(self.ti_h.text()) < (float(self.ti_bh.text())*2)))):
-                self.callHeightWarn()
-                return
-            if(self.rotmode == "pitch" and float(self.ti_p.text()) < float(self.ti_wd.text())):
-                self.callPitchWarn()
-                return
-            if(self.rotmode == "revolutions" and float(self.ti_re.text()) == 0):
-                self.callRevolutionsWarn()
+            if(self.areValuesBad()):
+                self.callInformation()
                 return
         self.success = success
         self.close()
+    ##  Utility functions end
+    ##  Event handler methods
+    ### Update handlers
+    def updateCentralHeight(self):
+        central_height = self.ds_h.value() - self.ds_bh.value()*2
+        if(self.springtype == "hook"):
+            central_height -= self.ds_r.value()*2
+        elif(self.springtype == "circle"):
+            central_height -= self.ds_r.value()*4
+        self.ds_ch.setValue(central_height)
+        ### After updating the height, if there are no bad values, update the pitch.
+        if(self.areValuesBad()):
+            self.callInformation()
+        else:
+            self.updatePitch()
+
+    def updatePitch(self):
+        ### If some of the input values are bad, warn and abort.
+        if(self.areValuesBad()):
+           self.callInformation()
+        else:
+            self.ds_p.setValue(self.ds_ch.value()/self.ds_re.value())
+
+    def updateRevolutions(self):
+        ### If some of the input values are bad, warn and abort.
+        if(self.areValuesBad()):
+           self.callInformation()
+        else:
+            self.ds_re.setValue(self.ds_ch.value()/self.ds_p.value())
+    ### Update handlers end
+    def onValueChanged(self):
+        self.warnAllowed = True
+        print("Should be first.")
+
+    def onFlatChosen(self):
+        self.springtype = "flat"
+        self.updateCentralHeight()
+
+    def onHookChosen(self):
+        self.springtype = "hook"
+        self.updateCentralHeight()
+
+    def onCircleChosen(self):
+        self.springtype = "circle"
+        self.updateCentralHeight()
+
+    def onPitchChosen(self):
+        self.rotmode = "pitch"
+        self.ds_p.setEnabled(True)
+        self.ds_re.setEnabled(False)
+
+    def onRevolutionsChosen(self):
+        self.rotmode = "revolutions"
+        self.ds_re.setEnabled(True)
+        self.ds_p.setEnabled(False)
 
     def onOk(self):
         self.tryQuit(True)
 
     def onCancel(self):
         self.tryQuit(False)
-
     ##  Event handler methods end
 
 
@@ -79,46 +121,47 @@ class GuiClass(QtGui.QDialog):
         self.success = False
         self.springtype = "flat"
         self.rotmode = "pitch" 
+        self.warnAllowed = True    #   A variable that allows a warning dialog to appear once and then wait until any value is altered.
         self.setGeometry(250, 250, 320, 400)
         self.setFixedSize(320, 480)
         self.setWindowTitle("Nya")
 
         ##  Labels and inputs.
-        dv = QtGui.QDoubleValidator()
-        dv_non_negative = QtGui.QDoubleValidator()
-        dv_non_negative.setRange(0, 100000)
 
         self.l_wd = QtGui.QLabel("Wire diameter [mm]:", self)
         self.l_wd.move(20, 20) 
-        self.ti_wd = QtGui.QLineEdit(self)
-        self.ti_wd.setValidator(dv_non_negative)
-        self.ti_wd.setText("0.5")
-        self.ti_wd.setFixedWidth(80)
-        self.ti_wd.move(220, 20)
+        self.ds_wd = QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(box=self.ds_wd, max=1000000, min=0.000001, step=0.1, default=0.5)
+        self.ds_wd.valueChanged[float].connect(self.onValueChanged)
+        self.ds_wd.setFixedWidth(80)
+        self.ds_wd.move(220, 20)
 
         self.l_h = QtGui.QLabel("Height [mm]:", self)
         self.l_h.move(20, 70)
-        self.ti_h = QtGui.QLineEdit(self)
-        self.ti_h.setValidator(dv_non_negative)
-        self.ti_h.setText("30")
-        self.ti_h.setFixedWidth(80)
-        self.ti_h.move(220, 70)
+        self.ds_h = self.focusSpinBox(self)
+        self.setupSpinBox(box=self.ds_h, max=1000000, min=0.000001, step=1, default=30)
+        self.ds_h.valueChanged[float].connect(self.onValueChanged)
+        self.ds_h.focusSignal.connect(self.updateCentralHeight)
+        self.ds_h.setFixedWidth(80)
+        self.ds_h.move(220, 70)
 
         self.l_bh = QtGui.QLabel("Base height [mm]:", self)
         self.l_bh.move(20, 120)
-        self.ti_bh = QtGui.QLineEdit(self)
-        self.ti_bh.setValidator(dv_non_negative)
-        self.ti_bh.setText("2")
-        self.ti_bh.setFixedWidth(80)
-        self.ti_bh.move(220, 120)
+        self.ds_bh =self.focusSpinBox(self)
+        self.setupSpinBox(box=self.ds_bh, max=1000000, min=0, step=1, default=2)
+        self.ds_bh.valueChanged[float].connect(self.onValueChanged)
+        self.ds_bh.focusSignal.connect(self.updateCentralHeight)
+        self.ds_bh.setFixedWidth(80)
+        self.ds_bh.move(220, 120)
 
         self.l_r = QtGui.QLabel("Radius [mm]:", self)
         self.l_r.move(20, 170)
-        self.ti_r = QtGui.QLineEdit(self)
-        self.ti_r.setValidator(dv_non_negative)
-        self.ti_r.setText("2.5")
-        self.ti_r.setFixedWidth(80)
-        self.ti_r.move(220, 170)
+        self.ds_r = self.focusSpinBox(self)
+        self.setupSpinBox(box=self.ds_r, max=1000000, min=0.000001, step=1, default=2.5)
+        self.ds_r.valueChanged[float].connect(self.onValueChanged)
+        self.ds_r.focusSignal.connect(self.updateCentralHeight)
+        self.ds_r.setFixedWidth(80)
+        self.ds_r.move(220, 170)
 
         self.grp_pitch = QtGui.QButtonGroup(self)
 
@@ -127,22 +170,32 @@ class GuiClass(QtGui.QDialog):
         self.rb_p.move(20, 220)
         self.grp_pitch.addButton(self.rb_p)
         self.rb_p.toggle()
-        self.ti_p = QtGui.QLineEdit(self)
-        self.ti_p.setValidator(dv)
-        self.ti_p.setText("3")
-        self.ti_p.setFixedWidth(80)
-        self.ti_p.move(220, 220)
+        self.ds_p = self.focusSpinBox(self)
+        self.setupSpinBox(box=self.ds_p, max=1000000, min=0.001, step=1, default=3)
+        self.ds_p.valueChanged[float].connect(self.onValueChanged)
+        self.ds_p.focusSignal.connect(self.updateRevolutions)
+        self.ds_p.setFixedWidth(80)
+        self.ds_p.move(220, 220)
 
         self.rb_re = QtGui.QRadioButton("Revolutions:", self)
         self.rb_re.clicked.connect(self.onRevolutionsChosen)
         self.rb_re.move(20, 270)
         self.grp_pitch.addButton(self.rb_re)
-        self.ti_re = QtGui.QLineEdit(self)
-        self.ti_re.setValidator(dv)
-        self.ti_re.setText("8")
-        self.ti_re.setFixedWidth(80)
-        self.ti_re.move(220, 270)
-        self.ti_re.setEnabled(False)
+        self.ds_re = self.focusSpinBox(self)
+        self.setupSpinBox(box=self.ds_re, max=1000000, min=0.001, step=1, default=8.67)
+        self.ds_re.valueChanged[float].connect(self.onValueChanged)
+        self.ds_re.focusSignal.connect(self.updatePitch)
+        self.ds_re.setFixedWidth(80)
+        self.ds_re.move(220, 270)
+        self.ds_re.setEnabled(False)
+
+        self.l_ch = QtGui.QLabel("Central part height:", self)
+        self.l_ch.move(20, 320)
+        self.ds_ch= QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(box=self.ds_ch, max=1000000, min=-1000000, step=1, default=26)
+        self.ds_ch.setFixedWidth(80)
+        self.ds_ch.move(220, 320)
+        self.ds_ch.setEnabled(False)
         ##  Labels and inputs end.
 
         ##  Additional options.
@@ -255,15 +308,16 @@ if(form.success):
         links = []
 
         ##  Get input
-        wire_diameter = float(form.ti_wd.text())
-        radius = float(form.ti_r.text())
+        wire_diameter = form.ds_wd.value()
+        radius = form.ds_r.value()
         radius = radius - wire_diameter/2
-        height = float(form.ti_h.text())
-        base_height = float(form.ti_bh.text())
+        height = form.ds_h.value()
+        base_height = form.ds_bh.value()
         base_rotation = base_height/wire_diameter*360
 
-        revolutions = float(form.ti_re.text())
-        pitch = float(form.ti_p.text())
+        revolutions = form.ds_re.value()
+        pitch = form.ds_p.value()
+        center_height = form.ds_ch.value()
         
           
         ##  Input values end 
@@ -272,9 +326,6 @@ if(form.success):
         
         ##  Hooked spring
         if(form.springtype == "hook"):
-            center_height = height-(radius+base_height)*2
-            if(form.rotmode == "revolutions"):
-                pitch = center_height / revolutions
             center_rotation = center_height/pitch*360
 
             lower_hook = makeHook(doc, radius, wire_diameter)
@@ -297,9 +348,6 @@ if(form.success):
 
         ##  Circle end
         elif(form.springtype == "circle"):
-            center_height = height-(radius*2+base_height)*2
-            if(form.rotmode == "revolutions"):
-                pitch = center_height / revolutions
             center_rotation = center_height/pitch*360
 
             lower_circle = makeCircle(doc, radius, wire_diameter)
@@ -324,7 +372,6 @@ if(form.success):
             
         ##  Flat-end spring as default
         else:
-            center_height = height-(base_height)*2
             center_rotation = center_height/pitch*360
 
             lower_placement = App.Placement(App.Vector(0, 0, 0), App.Rotation(0, 0, 0))
@@ -360,5 +407,5 @@ if(form.success):
 
         doc.recompute()
 
-'''                             Modelling code end                          '''
+'''                           Modelling code end                            '''
 ##===========================================================================##
