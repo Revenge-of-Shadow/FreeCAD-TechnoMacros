@@ -43,7 +43,7 @@ class GuiClass(QtGui.QDialog):
         if(self.ds_or.value() <= (self.ds_th.value()+self.ds_ir.value())):
             self.is_tw.setValue(0)
         else:
-            self.is_tw.setValue(math.tan(math.pi*2/float(self.is_at.value()))*(self.ds_or.value()-self.ds_th.value())*2)
+            self.is_tw.setValue(math.tan(math.pi*2/self.is_at.value()/2)*(self.ds_or.value()-self.ds_th.value())*2)
 
     def onOk(self):
         self.tryQuit(True)
