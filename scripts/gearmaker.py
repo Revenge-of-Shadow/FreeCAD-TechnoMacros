@@ -28,19 +28,20 @@ class GuiClass(QtGui.QDialog):
         box.setSingleStep(step)
         box.setValue(default)
 
-    def showToothWidth(self):
-        self.ti_tw.setValue(math.tan(math.pi*2/float(self.is_at.value()))*(self.ds_or.value()-self.ds_th.value())*2)
-
     def onValueChanged(self):
         #   outer radius <= tooth height + inner radius
         if(self.ds_or.value() <= (self.ds_th.value()+self.ds_ir.value())):
-            self.callInformation()
-            return
-        self.showToothWidth()
+            self.is_tw.setValue(0)
+        else:
+            self.is_tw.setValue(math.tan(math.pi*2/float(self.is_at.value()))*(self.ds_or.value()-self.ds_th.value())*2)
+
 
     def tryQuit(self, success):
         self.success = False
-        #if(success):
+        if(success):
+            if(self.ds_or.value() <= (self.ds_th.value()+self.ds_ir.value())):
+                self.callInformation()
+                return
         self.success = success
         self.close()
     ## Utility functions end
@@ -94,10 +95,10 @@ class GuiClass(QtGui.QDialog):
 
         self.l_tw = QtGui.QLabel("Tooth width [mm]:", self)
         self.l_tw.move(20, 220)
-        self.ti_tw = QtGui.QDoubleSpinBox(self)
-        self.ti_tw.setFixedWidth(80)
-        self.ti_tw.move(220, 220)
-        self.ti_tw.setEnabled(False)
+        self.is_tw = QtGui.QDoubleSpinBox(self)
+        self.is_tw.setFixedWidth(80)
+        self.is_tw.move(220, 220)
+        self.is_tw.setEnabled(False)
 
         self.l_e = QtGui.QLabel("Extrusion [mm]:", self)
         self.l_e.move(20, 270)
@@ -176,8 +177,7 @@ def makeGearWheel(doc, o_radius, i_radius, tooth_amount, tooth_h, extrusion):
     pad.ReferenceAxis = (sketch, ['N_Axis'])
     pad.Reversed = (extrusion < 0)
 
-    
-
+    sketch.Visibility = False
 ##  FreeCAD object functions end
 
 if(form.success):
