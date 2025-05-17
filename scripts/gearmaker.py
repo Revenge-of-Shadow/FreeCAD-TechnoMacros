@@ -15,8 +15,8 @@ class GuiClass(QtGui.QDialog):
                                       "Outer radius must be bigger than inner radius and tooth height together."+
                                       "\nZero inner radius is allowed."+
                                       "\nAmount of teeth must be above 2."+
-                                      "\nAmound and outer radius influence tooth width."+
-                                      "\nConnected gearwheels must have the same tooth width and height."+
+                                      "\nAmount and outer radius influence tooth width."+
+                                      "\nConnected gearwheels must have the same tooth width and the same tooth height."+
                                       "\nExtrusion may be positive, negative (reversed) and nil (sketch only)."
                                       )
 
