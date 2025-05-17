@@ -44,6 +44,7 @@ class GuiClass(QtGui.QDialog):
             self.is_tw.setValue(0)
         else:
             self.is_tw.setValue(math.tan(math.pi*2/self.is_at.value()/2)*(self.ds_or.value()-self.ds_th.value())*2)
+            self.is_td.setValue(math.tan(math.pi*2/self.is_at.value()/2)*(self.ds_or.value())*2)
 
     def onOk(self):
         self.tryQuit(True)
@@ -92,20 +93,27 @@ class GuiClass(QtGui.QDialog):
         self.ds_th.setFixedWidth(80)
         self.ds_th.move(220, 170)
 
-        self.l_tw = QtGui.QLabel("Tooth width [mm]:", self)
-        self.l_tw.move(20, 220)
-        self.is_tw = QtGui.QDoubleSpinBox(self)
-        self.is_tw.setFixedWidth(80)
-        self.is_tw.move(220, 220)
-        self.is_tw.setEnabled(False)
-
         self.l_e = QtGui.QLabel("Extrusion [mm]:", self)
-        self.l_e.move(20, 270)
+        self.l_e.move(20, 220)
         self.ds_e = QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(self.ds_e, 1000000, min=-1000000, step=1, default=2) 
         self.ds_e.valueChanged[float].connect(self.onValueChanged)
         self.ds_e.setFixedWidth(80)
-        self.ds_e.move(220, 270)
+        self.ds_e.move(220, 220)
+
+        self.l_tw = QtGui.QLabel("Tooth width [mm]:", self)
+        self.l_tw.move(20, 270)
+        self.is_tw = QtGui.QDoubleSpinBox(self)
+        self.is_tw.setFixedWidth(80)
+        self.is_tw.move(220, 270)
+        self.is_tw.setEnabled(False)
+
+        self.l_td = QtGui.QLabel("Distance between peaks [mm]:", self)
+        self.l_td.move(20, 320)
+        self.is_td = QtGui.QDoubleSpinBox(self)
+        self.is_td.setFixedWidth(80)
+        self.is_td.move(220, 320)
+        self.is_td.setEnabled(False)
         ##  Inputs and labels end
 
         ##  Confirm/Cancel buttons
@@ -129,7 +137,7 @@ form.exec()
 '''==========================================================='''
 '''                     Modelling code                        '''
 ##  FreeCAD object functions
-def makeGearWheel(doc, o_radius, i_radius, tooth_amount, tooth_h, extrusion):
+def makeGearWheel(doc, o_radius, i_radius, tooth_amount, tooth_h, extrusion, angle_divider = 2):
     body = doc.addObject('PartDesign::Body', 'gearBody')
 
     sketch = body.newObject('Sketcher::SketchObject', 'gearSketch')
@@ -146,12 +154,21 @@ def makeGearWheel(doc, o_radius, i_radius, tooth_amount, tooth_h, extrusion):
     points = []
     for i in range(tooth_amount*2):
         angle = math.pi*2/(tooth_amount*2)*i
-        
-        if(i % 2 == 1):
-            dist = o_radius - tooth_h
+       
+        if(angle_divider <= 1):
+            if(i % 2 == 1):
+                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(o_radius-tooth_h))
+            else:
+                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(o_radius))
         else:
-            dist = o_radius
-        points.append(App.Vector(math.cos(angle)*dist, math.sin(angle)*dist, 0))
+            angle_offset = math.pi*2/(tooth_amount)/4/angle_divider
+            if(i % 2 == 1):
+                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(o_radius-tooth_h))
+                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(o_radius))
+            else:
+                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(o_radius))
+                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(o_radius-tooth_h))
+            
 
     #   I am sorry for this. I could not find any documentation to make it pretty.
     for i in range(len(points)-1):
