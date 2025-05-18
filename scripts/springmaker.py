@@ -57,10 +57,15 @@ class GuiClass(QtGui.QDialog):
     ### Update handlers
     def updateCentralHeight(self):
         central_height = self.ds_h.value() - self.ds_bh.value()*2
+        
+
         if(self.springtype == "hook"):
             central_height -= self.ds_r.value()*2
         elif(self.springtype == "circle" or self.springtype == "circle_centered"):
-            central_height -= self.ds_r.value()*4
+            central_height -= self.ds_r.value()*4 - self.ds_wd.value()
+        elif(self.ds_bh != 0):
+            central_height -= self.ds_wd.value()
+
         self.ds_ch.setValue(central_height)
         ### After updating the height, if there are no bad values, update the pitch.
         if(self.areValuesBad()):
@@ -340,6 +345,7 @@ if(form.success):
         revolutions = form.ds_re.value()
         pitch = form.ds_p.value()
         center_height = form.ds_ch.value()
+
         
           
         ##  Input values end 
@@ -410,6 +416,9 @@ if(form.success):
                                                    App.Vector(0,0,0))
             upper_circle.Label = "Upper circle"
             links.append(upper_circle)
+
+            print(f"radius*2+base_height+center_height+base_height+radius")
+            print(f"{radius}*2+{base_height}+{center_height}+{base_height}+{radius} = {radius*2+base_height+center_height+base_height+radius}")
             
         ##  Flat-end spring as default
         else:
@@ -440,6 +449,10 @@ if(form.success):
             upper.Label = "Upper segment"
             links.append(upper)
         ##  Spring base segments end
+
+        for item in links:
+            item.Placement.Base.z += wire_diameter/2
+            print(f"{item.Label}: {item.Placement.Base.z}")
 
 
         compound = doc.addObject("Part::Compound", "springCompound")
