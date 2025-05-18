@@ -26,7 +26,7 @@ class GuiClass(QtGui.QDialog):
                                       "\n- bigger than two times base height and two times radius in case of hook mode;"+
                                       "\n- bigger than two times base height and four times radius in case of circle mode."+
                                       "\n\nWire diameter, radius and height must be non-zero."+
-                                      "\n\nPitch value must be above the wire diameter."+
+                                      "\n\nPitch value must be above or equal to the wire diameter."+
                                       "\n\nAmount of spring revolutions can not be equal to zero."
                                       )
 
@@ -36,7 +36,7 @@ class GuiClass(QtGui.QDialog):
             self.ds_r.value() == 0 or
             self.ds_re.value() == 0 or
             self.ds_ch.value() <= 0 or 
-            self.ds_p.value() - self.ds_wd.value() <= 0 or
+            self.ds_p.value() - self.ds_wd.value() < 0 or
             self.ds_ch.value()/self.ds_re.value() < self.ds_wd.value())
     ##  Error "handling" end
     ##  Utility functions
@@ -59,7 +59,7 @@ class GuiClass(QtGui.QDialog):
         central_height = self.ds_h.value() - self.ds_bh.value()*2
         if(self.springtype == "hook"):
             central_height -= self.ds_r.value()*2
-        elif(self.springtype == "circle"):
+        elif(self.springtype == "circle" or self.springtype == "circle_centered"):
             central_height -= self.ds_r.value()*4
         self.ds_ch.setValue(central_height)
         ### After updating the height, if there are no bad values, update the pitch.
@@ -97,6 +97,10 @@ class GuiClass(QtGui.QDialog):
         self.springtype = "circle"
         self.updateCentralHeight()
 
+    def onCenteredCircleChosen(self):
+        self.springtype = "circle_centered"
+        self.updateCentralHeight()
+
     def onPitchChosen(self):
         self.rotmode = "pitch"
         self.ds_p.setEnabled(True)
@@ -128,11 +132,13 @@ class GuiClass(QtGui.QDialog):
 
         self.l_wd = QtGui.QLabel("Wire diameter [mm]:", self)
         self.l_wd.move(20, 20) 
-        self.ds_wd = QtGui.QDoubleSpinBox(self)
+        self.ds_wd = self.focusSpinBox(self)
         self.setupSpinBox(box=self.ds_wd, max=1000000, min=0.000001, step=0.1, default=0.5)
         self.ds_wd.valueChanged[float].connect(self.onValueChanged)
+        self.ds_wd.focusSignal.connect(self.updateCentralHeight)
         self.ds_wd.setFixedWidth(80)
         self.ds_wd.move(220, 20)
+        self.ds_wd.setDecimals(4)
 
         self.l_h = QtGui.QLabel("Height [mm]:", self)
         self.l_h.move(20, 70)
@@ -142,6 +148,7 @@ class GuiClass(QtGui.QDialog):
         self.ds_h.focusSignal.connect(self.updateCentralHeight)
         self.ds_h.setFixedWidth(80)
         self.ds_h.move(220, 70)
+        self.ds_h.setDecimals(4)
 
         self.l_bh = QtGui.QLabel("Base height [mm]:", self)
         self.l_bh.move(20, 120)
@@ -151,6 +158,7 @@ class GuiClass(QtGui.QDialog):
         self.ds_bh.focusSignal.connect(self.updateCentralHeight)
         self.ds_bh.setFixedWidth(80)
         self.ds_bh.move(220, 120)
+        self.ds_bh.setDecimals(4)
 
         self.l_r = QtGui.QLabel("Radius [mm]:", self)
         self.l_r.move(20, 170)
@@ -160,6 +168,7 @@ class GuiClass(QtGui.QDialog):
         self.ds_r.focusSignal.connect(self.updateCentralHeight)
         self.ds_r.setFixedWidth(80)
         self.ds_r.move(220, 170)
+        self.ds_r.setDecimals(4)
 
         self.grp_pitch = QtGui.QButtonGroup(self)
 
@@ -174,6 +183,7 @@ class GuiClass(QtGui.QDialog):
         self.ds_p.focusSignal.connect(self.updateRevolutions)
         self.ds_p.setFixedWidth(80)
         self.ds_p.move(220, 220)
+        self.ds_p.setDecimals(4)
 
         self.rb_re = QtGui.QRadioButton("Revolutions:", self)
         self.rb_re.clicked.connect(self.onRevolutionsChosen)
@@ -186,6 +196,7 @@ class GuiClass(QtGui.QDialog):
         self.ds_re.setFixedWidth(80)
         self.ds_re.move(220, 270)
         self.ds_re.setEnabled(False)
+        self.ds_re.setDecimals(4)
 
         self.l_ch = QtGui.QLabel("Central part height:", self)
         self.l_ch.move(20, 320)
@@ -194,6 +205,7 @@ class GuiClass(QtGui.QDialog):
         self.ds_ch.setFixedWidth(80)
         self.ds_ch.move(220, 320)
         self.ds_ch.setEnabled(False)
+        self.ds_ch.setDecimals(4)
         ##  Labels and inputs end.
 
         ##  Additional options.
@@ -205,7 +217,6 @@ class GuiClass(QtGui.QDialog):
         self.grp_shape.addButton(self.rb_flat)
         self.rb_flat.toggle()
         
-
         self.rb_hook = QtGui.QRadioButton("hook end", self)
         self.rb_hook.clicked.connect(self.onHookChosen)
         self.rb_hook.move(210, 360)
@@ -213,8 +224,13 @@ class GuiClass(QtGui.QDialog):
 
         self.rb_circle = QtGui.QRadioButton("circle end", self)
         self.rb_circle.clicked.connect(self.onCircleChosen)
-        self.rb_circle.move(120, 390)
+        self.rb_circle.move(20, 390)
         self.grp_shape.addButton(self.rb_circle)
+
+        self.rb_cent_circle = QtGui.QRadioButton("circle end \ncentered", self)
+        self.rb_cent_circle.clicked.connect(self.onCenteredCircleChosen)
+        self.rb_cent_circle.move(210, 390)
+        self.grp_shape.addButton(self.rb_cent_circle)
         ##  Additional options end.
 
 
@@ -294,6 +310,14 @@ def makeCircle(doc, radius, wire_diameter = 0.5):
     body.Angle3 = 360
 
     return body
+
+def makeCylinder(doc, radius, height):
+    body = doc.addObject("Part::Cylinder", "Cylinder")
+
+    body.Radius = radius
+    body.Height = height
+
+    return body
 ##  FreeCAD object functions end
 
 
@@ -345,11 +369,22 @@ if(form.success):
             links.append(upper_hook)
 
         ##  Circle end
-        elif(form.springtype == "circle"):
-            center_rotation = center_height/pitch*360
+        elif(form.springtype == "circle" or form.springtype == "circle_centered"):
+            if(form.springtype == "circle_centered"):
+                offset = 0
+                lower_cylinder = makeCylinder(doc, wire_diameter/2, radius)
+                lower_cylinder.Placement = App.Placement(App.Vector(0,0,radius*2),
+                                                    App.Rotation(90, 0, 90), 
+                                                    App.Vector(0,0,0))
+                lower_cylinder.Label = "Lower cylinder"
+                links.append(lower_cylinder)
+            else:
+                offset = radius
+
+            center_rotation = center_height*360/pitch
 
             lower_circle = makeCircle(doc, radius, wire_diameter)
-            lower_circle.Placement = App.Placement(App.Vector(radius,0,radius),
+            lower_circle.Placement = App.Placement(App.Vector(offset,0,radius),
                                                    App.Rotation(90,0,90))
             lower_circle.Label = "Lower circle"
             links.append(lower_circle)
@@ -361,8 +396,16 @@ if(form.success):
             upper_placement = App.Placement(App.Vector(0, 0, radius*2+base_height+center_height), 
                                             App.Rotation(base_rotation+center_rotation, 0, 0))
 
+            if(offset == 0):
+                upper_cylinder = makeCylinder(doc, wire_diameter/2, radius)
+                upper_cylinder.Placement = App.Placement(App.Vector(0, 0, radius*2+base_height+center_height+base_height),
+                                                       App.Rotation(base_rotation+center_rotation+base_rotation+90, 0, 90), 
+                                                       App.Vector(0,0,0))
+                upper_cylinder.Label = "Upper cylinder"
+                links.append(upper_cylinder)
+
             upper_circle = makeCircle(doc, radius, wire_diameter)
-            upper_circle.Placement = App.Placement(App.Vector(radius*math.cos((base_rotation+center_rotation+base_rotation)/180*math.pi), radius*math.sin((base_rotation+center_rotation+base_rotation)/180*math.pi), radius*2+base_height+center_height+base_height+radius), 
+            upper_circle.Placement = App.Placement(App.Vector(offset*math.cos((base_rotation+center_rotation+base_rotation)/180*math.pi), offset*math.sin((base_rotation+center_rotation+base_rotation)/180*math.pi), radius*2+base_height+center_height+base_height+radius), 
                                                    App.Rotation(base_rotation+center_rotation+base_rotation+90, 0, 90), 
                                                    App.Vector(0,0,0))
             upper_circle.Label = "Upper circle"
