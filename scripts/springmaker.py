@@ -451,7 +451,7 @@ if(form.success):
         ##  Spring base segments end
 
         for item in links:
-            item.Placement.Base.z += wire_diameter/2
+            item.Placement.Base.z += wire_diameter/2 - height/2
             print(f"{item.Label}: {item.Placement.Base.z}")
 
 
