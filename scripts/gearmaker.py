@@ -40,16 +40,22 @@ def makeSketch(o_radius, i_radius, tooth_amount, tooth_h, angle_divider):
     sketch.AttachmentSupport = (doc.getObject('XY_Plane'), [''])
     sketch.MapMode = 'FlatFace'
     
-    geoList = []
-    geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), i_radius))
-    sketch.addGeometry(geoList, False)
-    del geoList
-
+    if(i_radius > 0):
+        geoList = []
+        geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), i_radius))
+        sketch.addGeometry(geoList, False)
+        del geoList
+    elif(i_radius < 0):
+        geoList = []
+        geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), o_radius - i_radius))
+        sketch.addGeometry(geoList, False)
+        del geoList
     
 
     points = []
+    angle_step = math.pi*2/(tooth_amount*2)
     for i in range(tooth_amount*2):
-        angle = math.pi*2/(tooth_amount*2)*i
+        angle = angle_step*i
        
         if(angle_divider <= 1):
             if(i % 2 == 1):
@@ -57,7 +63,8 @@ def makeSketch(o_radius, i_radius, tooth_amount, tooth_h, angle_divider):
             else:
                 points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(o_radius))
         else:
-            angle_offset = math.pi*2/(tooth_amount)/4/angle_divider
+            angle_offset = angle_step/angle_divider
+            angle += angle_step/2
             if(i % 2 == 1):
                 points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(o_radius-tooth_h))
                 points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(o_radius))
@@ -179,7 +186,7 @@ class GuiClass(QtGui.QDialog):
         self.l_ir = QtGui.QLabel("Inner radius [mm]:", self)
         self.l_ir.move(20, 70)
         self.ds_ir = QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(box=self.ds_ir, max=1000000, min=0, step=1, default=1) 
+        self.setupSpinBox(box=self.ds_ir, max=1000000, min=-1000000, step=1, default=1) 
         self.ds_ir.valueChanged[float].connect(self.onValueChanged)
         self.ds_ir.setFixedWidth(80)
         self.ds_ir.move(220, 70)
@@ -203,7 +210,7 @@ class GuiClass(QtGui.QDialog):
         self.l_e = QtGui.QLabel("Extrusion [mm]:", self)
         self.l_e.move(20, 220)
         self.ds_e = QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(self.ds_e, 1000000, min=-1000000, step=1, default=2) 
+        self.setupSpinBox(self.ds_e, 1000000, min=-1000000, step=1, default=0) 
         self.ds_e.valueChanged[float].connect(self.onValueChanged)
         self.ds_e.setFixedWidth(80)
         self.ds_e.move(220, 220)
