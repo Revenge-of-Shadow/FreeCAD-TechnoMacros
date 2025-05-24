@@ -18,7 +18,7 @@ I shall have made it documented by FreeCAD standards. Eventually.
 
 
 ## 1. Spring maker
-[Spring screenshot](./pictures/screenshots/Springmaker.png)
+![Spring screenshot](./pictures/screenshots/Springmaker.png)
 
 ### 1.1. What's this?
 A program (macro) that takes spring parameters as user input and forms straight springs.
@@ -55,7 +55,7 @@ Spring types:
 
 
 ##  2. Gear maker
-[Gear screenshot](./pictures/screenshots/Gearmaker.png)
+![Gear screenshot](./pictures/screenshots/Gearmaker.png)
 
 ### 2.1. What's this?
 A program that forms cogwheels by data provided by a user. 
