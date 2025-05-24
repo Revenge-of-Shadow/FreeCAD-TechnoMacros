@@ -1,4 +1,4 @@
-!["If you need the right tools, invent them!"](https://www.youtube.com/watch?v=tCJ0Zs8DG3c)
+["If you need the right tools, invent them!"](https://www.youtube.com/watch?v=tCJ0Zs8DG3c)
 
 # TechnoMacros
 ### Means to make mechanical components.
