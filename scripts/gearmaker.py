@@ -57,7 +57,7 @@ def makeSketch(o_radius, i_radius, tooth_amount, tooth_h, angle_divider):
     for i in range(tooth_amount*2):
         angle = angle_step*i
        
-        if(angle_divider <= 1):
+        if(angle_divider == 2):
             if(i % 2 == 1):
                 points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(o_radius-tooth_h))
             else:
@@ -161,7 +161,7 @@ class GuiClass(QtGui.QDialog):
                        self.ds_ir.value(), 
                        self.is_at.value(), 
                        self.ds_th.value(), 
-                       self.ds_ao.value())
+                       self.ds_ao.value()*2)    #   Angle modifier is just magic.
         makeGearWheel(self.ds_e.value())
 
     def onCancel(self):
