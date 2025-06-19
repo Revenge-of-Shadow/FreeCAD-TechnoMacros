@@ -1,6 +1,33 @@
 from PySide import QtCore, QtGui
 import FreeCAD as App
 import math
+import json
+
+filename = "gearwheel.json"
+'''==========================================================='''
+'''                       Class  code                         '''
+def obj_dict(obj):
+    return obj.__dict__
+
+class Gearwheel:
+    def __init__(self, outer_r, inner_r, teeth, tooth_height,  angle_offset, extrusion):
+        self.outer_r =  outer_r
+        self.inner_r =  inner_r
+        self.teeth   =   teeth
+        self.tooth_height = tooth_height
+        self.angle_offset = angle_offset
+        self.extrusion = extrusion
+
+def gearwheel_to_json(obj):
+    with open(filename, "w") as file:
+        json.dump(obj, file, default = obj_dict)
+
+def gearwheel_from_json():
+    with open(filename, "r") as file:
+        data = json.load(file)
+        return Gearwheel(data["outer_r"], data["inner_r"], data["teeth"], data["tooth_height"], data["angle_offset"], data["extrusion"])     
+'''                     Class code end                        '''
+'''==========================================================='''
 
 '''==========================================================='''
 '''                     Modelling code                        '''
@@ -250,7 +277,24 @@ class GuiClass(QtGui.QDialog):
         self.show()
 
 form = GuiClass()
-form.exec()
+
+try:
+    last = gearwheel_from_json()
+    #   Reads from file. 
+    #   Otherwise throws.
+    form.ds_or.setValue(last.outer_r)
+    form.ds_ir.setValue(last.inner_r)
+    form.is_at.setValue(last.teeth)
+    form.ds_th.setValue(last.tooth_height)
+    form.ds_ao.setValue(last.angle_offset)
+    form.ds_e.setValue(last.extrusion)
+    form.onValueChanged()
+except FileNotFoundError:
+    pass    #   Default values are used.
+finally:
+    form.exec()
+    last = Gearwheel(form.ds_or.value(), form.ds_ir.value(), form.is_at.value(), form.ds_th.value(), form.ds_ao.value(), form.ds_e.value())
+    gearwheel_to_json(last)
 
 '''               Graphical user interface end                '''
 '''==========================================================='''
