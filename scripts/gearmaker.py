@@ -10,12 +10,12 @@ def obj_dict(obj):
     return obj.__dict__
 
 class Gearwheel:
-    def __init__(self, outer_r, inner_r, teeth, tooth_height,  angle_offset, extrusion):
+    def __init__(self, outer_r, inner_r, teeth, tooth_h,  angle_divider, extrusion):
         self.outer_r =  outer_r
         self.inner_r =  inner_r
         self.teeth   =   teeth
-        self.tooth_height = tooth_height
-        self.angle_offset = angle_offset
+        self.tooth_h = tooth_h
+        self.angle_divider = angle_divider
         self.extrusion = extrusion
 
 def gearwheel_to_json(obj):
@@ -25,7 +25,7 @@ def gearwheel_to_json(obj):
 def gearwheel_from_json():
     with open(filename, "r") as file:
         data = json.load(file)
-        return Gearwheel(data["outer_r"], data["inner_r"], data["teeth"], data["tooth_height"], data["angle_offset"], data["extrusion"])     
+        return Gearwheel(data["outer_r"], data["inner_r"], data["teeth"], data["tooth_h"], data["angle_divider"], data["extrusion"])     
 '''                     Class code end                        '''
 '''==========================================================='''
 
@@ -55,7 +55,13 @@ def removePrev():
         doc.removeObject(body.Name)
         body = None
 
-def makeSketch(o_radius, i_radius, tooth_amount, tooth_h, angle_divider):
+def makeSketch(gearwheel):
+    outer_r = gearwheel.outer_r
+    inner_r = gearwheel.inner_r
+    teeth = gearwheel.teeth
+    tooth_h = gearwheel.tooth_h
+    angle_divider = gearwheel.angle_divider
+
     removePrev()
 
     global body 
@@ -67,37 +73,37 @@ def makeSketch(o_radius, i_radius, tooth_amount, tooth_h, angle_divider):
     sketch.AttachmentSupport = (doc.getObject('XY_Plane'), [''])
     sketch.MapMode = 'FlatFace'
     
-    if(i_radius > 0):
+    if(inner_r > 0):
         geoList = []
-        geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), i_radius))
+        geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), inner_r))
         sketch.addGeometry(geoList, False)
         del geoList
-    elif(i_radius < 0):
+    elif(inner_r < 0):
         geoList = []
-        geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), o_radius - i_radius))
+        geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), outer_r - inner_r))
         sketch.addGeometry(geoList, False)
         del geoList
     
 
     points = []
-    angle_step = math.pi*2/(tooth_amount*2)
-    for i in range(tooth_amount*2):
+    angle_step = math.pi*2/(teeth*2)
+    for i in range(teeth*2):
         angle = angle_step*i
        
         if(angle_divider == 2):
             if(i % 2 == 1):
-                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(o_radius-tooth_h))
+                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(outer_r-tooth_h))
             else:
-                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(o_radius))
+                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(outer_r))
         else:
             angle_offset = angle_step/angle_divider
             angle += angle_step/2
             if(i % 2 == 1):
-                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(o_radius-tooth_h))
-                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(o_radius))
+                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(outer_r-tooth_h))
+                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(outer_r))
             else:
-                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(o_radius))
-                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(o_radius-tooth_h))
+                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(outer_r))
+                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(outer_r-tooth_h))
             
 
     #   I am sorry for this. I could not find any documentation to make it pretty.
@@ -118,7 +124,11 @@ def makeSketch(o_radius, i_radius, tooth_amount, tooth_h, angle_divider):
 
     return sketch
 
-def makeGearWheel(extrusion):
+def makeGearWheel(gearwheel):
+    extrusion = gearwheel.extrusion
+    
+    makeSketch(gearwheel)
+
     if(extrusion == 0):
         return
 
@@ -184,12 +194,14 @@ class GuiClass(QtGui.QDialog):
             self.callInformation()
             return
 
-        makeSketch(self.ds_or.value(), 
-                       self.ds_ir.value(), 
-                       self.is_at.value(), 
-                       self.ds_th.value(), 
-                       self.ds_ao.value()*2)    #   Angle modifier is just magic.
-        makeGearWheel(self.ds_e.value())
+        gearwheel = Gearwheel(self.ds_or.value(), 
+                            self.ds_ir.value(), 
+                            self.is_at.value(), 
+                            self.ds_th.value(), 
+                            self.ds_ao.value()*2,
+                            self.ds_e.value())
+
+        makeGearWheel(gearwheel)
 
     def onCancel(self):
         self.close()
@@ -285,11 +297,11 @@ try:
     form.ds_or.setValue(last.outer_r)
     form.ds_ir.setValue(last.inner_r)
     form.is_at.setValue(last.teeth)
-    form.ds_th.setValue(last.tooth_height)
-    form.ds_ao.setValue(last.angle_offset)
+    form.ds_th.setValue(last.tooth_h)
+    form.ds_ao.setValue(last.angle_divider)
     form.ds_e.setValue(last.extrusion)
     form.onValueChanged()
-except FileNotFoundError:
+except (FileNotFoundError):
     pass    #   Default values are used.
 finally:
     form.exec()
