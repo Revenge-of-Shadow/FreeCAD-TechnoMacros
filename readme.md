@@ -36,7 +36,7 @@ Default values were taken from ballpoint pen spring.
 *   Revolutions: amount of loops. Natural numbers place end point above the start of a spring. 
 Pitch and revolutions values are **dependent** on each other and thus can **not** be edited simultaneously.
 
-*Central part height: calculated height of the spring without ends and bases.
+*   Central part height: calculated height of the spring without ends and bases.
 
 Spring types:
 
@@ -71,8 +71,8 @@ A program that forms cogwheels by data provided by a user.
 *   Extrusion: sign of the value changes direction by Z axis; 0 forms only sketch and excludes extrusion.
 *   Angle offset modifier: alters the angle that a cog side is rotated by. Bigger values tilt the teeth outward.
 
-*Tooth width: calculated value corresponding to the tooth base width. Is not correct when **angle offset modifier** is not 1.
-*Distance between peaks: calculated value; distance between one endpoint and another. May be not quite correct with **angle offset modifier** different from 1.
+*   Tooth width: calculated value corresponding to the tooth base width. Is not correct when **angle offset modifier** is not 1.
+*   Distance between peaks: calculated value; distance between one endpoint and another. May be not quite correct with **angle offset modifier** different from 1.
 
 
 ## 5. Bearing maker
