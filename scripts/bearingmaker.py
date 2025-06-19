@@ -31,8 +31,13 @@ def bearing_from_json():
 
 '''==========================================================='''
 '''                     Modelling code                        '''
-def makeBearing(inner_r, outer_R, thick, ball_amount):
-    ball_r = min((outer_R-inner_r)/2, thick/2)/2
+def makeBearing(bearing):
+    inner_r = bearing.inner_r
+    outer_R = bearing.outer_R
+    height = bearing.height
+    ball_amount = bearing.ball_amount
+
+    ball_r = min((outer_R-inner_r)/2, height/2)/2
 
     middle_r = (inner_r + outer_R)/2
 
@@ -43,19 +48,19 @@ def makeBearing(inner_r, outer_R, thick, ball_amount):
 
 # Ball center as offset.
     ball_hoffset = ((outer_r - inner_R)/2 + inner_R)
-    ball_voffset = thick / 2
+    ball_voffset = height / 2
 
 
 
-    o_line_1 = Part.makeLine((outer_R, 0, thick - fillet_r), (outer_R, 0, fillet_r))
+    o_line_1 = Part.makeLine((outer_R, 0, height - fillet_r), (outer_R, 0, fillet_r))
     o_line_2 = Part.makeLine((outer_R - fillet_r, 0, 0), (outer_r+fillet_r, 0, 0))
-    o_line_3 = Part.makeLine((outer_r, 0, fillet_r), (outer_r, 0, thick - fillet_r))
-    o_line_4 = Part.makeLine((outer_r + fillet_r, 0, thick), (outer_R-fillet_r, 0, thick))
+    o_line_3 = Part.makeLine((outer_r, 0, fillet_r), (outer_r, 0, height - fillet_r))
+    o_line_4 = Part.makeLine((outer_r + fillet_r, 0, height), (outer_R-fillet_r, 0, height))
 
     o_rnding_1 = Part.makeCircle(fillet_r, Base.Vector(outer_R - fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 0, 90)
     o_rnding_2 = Part.makeCircle(fillet_r, Base.Vector(outer_r + fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 90, 180)
-    o_rnding_3 = Part.makeCircle(fillet_r, Base.Vector(outer_r + fillet_r, 0, thick - fillet_r), Base.Vector(0, 1, 0), 180, 270)
-    o_rnding_4 = Part.makeCircle(fillet_r, Base.Vector(outer_R - fillet_r, 0, thick - fillet_r), Base.Vector(0, 1, 0), 270, 360)
+    o_rnding_3 = Part.makeCircle(fillet_r, Base.Vector(outer_r + fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 180, 270)
+    o_rnding_4 = Part.makeCircle(fillet_r, Base.Vector(outer_R - fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 270, 360)
 
     o_wire = Part.Wire([o_line_1, o_rnding_1, o_line_2, o_rnding_2, o_line_3, o_rnding_3, o_line_4, o_rnding_4])
     o_wire = Part.Face(o_wire)
@@ -69,15 +74,15 @@ def makeBearing(inner_r, outer_R, thick, ball_amount):
 
 
 
-    i_line_1 = Part.makeLine((inner_R, 0, thick - fillet_r), (inner_R, 0, fillet_r))
+    i_line_1 = Part.makeLine((inner_R, 0, height - fillet_r), (inner_R, 0, fillet_r))
     i_line_2 = Part.makeLine((inner_R - fillet_r, 0, 0), (inner_r+fillet_r, 0, 0))
-    i_line_3 = Part.makeLine((inner_r, 0, fillet_r), (inner_r, 0, thick - fillet_r))
-    i_line_4 = Part.makeLine((inner_r + fillet_r, 0, thick), (inner_R - fillet_r, 0, thick))
+    i_line_3 = Part.makeLine((inner_r, 0, fillet_r), (inner_r, 0, height - fillet_r))
+    i_line_4 = Part.makeLine((inner_r + fillet_r, 0, height), (inner_R - fillet_r, 0, height))
 
     i_rnding_1 = Part.makeCircle(fillet_r, Base.Vector(inner_R - fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 0, 90)
     i_rnding_2 = Part.makeCircle(fillet_r, Base.Vector(inner_r + fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 90, 180)
-    i_rnding_3 = Part.makeCircle(fillet_r, Base.Vector(inner_r + fillet_r, 0, thick - fillet_r), Base.Vector(0, 1, 0), 180, 270)
-    i_rnding_4 = Part.makeCircle(fillet_r, Base.Vector(inner_R - fillet_r, 0, thick - fillet_r), Base.Vector(0, 1, 0), 270, 360)
+    i_rnding_3 = Part.makeCircle(fillet_r, Base.Vector(inner_r + fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 180, 270)
+    i_rnding_4 = Part.makeCircle(fillet_r, Base.Vector(inner_R - fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 270, 360)
 
     i_wire = Part.Wire([i_line_1, i_rnding_1, i_line_2, i_rnding_2, i_line_3, i_rnding_3, i_line_4, i_rnding_4])
     i_wire = Part.Face(i_wire)
@@ -130,7 +135,8 @@ class GuiClass(QtGui.QDialog):
         if(self.areValuesBad()):
             self.callInformation()
             return
-        makeBearing(self.ds_id.value()/2, self.ds_od.value()/2, self.ds_h.value(), self.s_b.value())
+        bearing = Bearing(self.ds_id.value()/2, self.ds_od.value()/2, self.ds_h.value(), self.s_b.value())
+        makeBearing(bearing)
         self.close()
 
     def onCancel(self):
