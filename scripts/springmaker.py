@@ -1,6 +1,36 @@
 from PySide import QtCore, QtGui
 import FreeCAD as App
 import math
+import json
+
+filename = "last_spring.json"
+'''==========================================================='''
+'''                       Class  code                         '''
+def obj_dict(obj):
+    return obj.__dict__
+
+class Spring:
+    def __init__(self, wire_d, r, h, base_h, revolutions, pitch, center_h, mode):
+        self.wire_d = wire_d
+        self.r = r
+        self.h = h
+        self.base_h = base_h
+        self.revolutions = revolutions
+        self.pitch = pitch
+        self.center_h = center_h
+        self.mode = mode
+
+def spring_to_json(obj):
+    with open(filename, "w") as file:
+        json.dump(obj, file, default = obj_dict)
+
+def spring_from_json():
+    with open(filename, "r") as file:
+        data = json.load(file)
+        return Spring(data["wire_d"], data["r"], data["h"], data["base_h"], data["revolutions"], data["pitch"], data["center_h"], data["mode"])
+'''                     Class code end                        '''
+'''==========================================================='''
+
 ##===========================================================================##
 '''                         Graphical user interface code                   '''
 class GuiClass(QtGui.QDialog):
@@ -253,8 +283,6 @@ class GuiClass(QtGui.QDialog):
 
         self.show()
 
-form = GuiClass()
-form.exec()
 '''                         Graphical user interface end                    '''
 ##===========================================================================##
 
@@ -324,6 +352,40 @@ def makeCylinder(doc, radius, height):
 
     return body
 ##  FreeCAD object functions end
+
+form = GuiClass()
+
+try:
+    last = spring_from_json()
+    #   Reads from file.
+    #   Otherwise throws.
+    form.ds_wd.setValue(last.wire_d)
+    form.ds_r.setValue(last.r)
+    form.ds_h.setValue(last.h)
+    form.ds_bh.setValue(last.base_h)
+    form.ds_re.setValue(last.revolutions)
+    form.ds_p.setValue(last.pitch)
+    form.ds_ch.setValue(last.center_h)
+
+    if(last.mode == "flat"):
+        form.rb_flat.toggle()
+    elif(last.mode == "hook"):
+        form.rb_hook.toggle()
+    elif(last.mode == "circle"):
+        form.rb_circle.toggle()
+    elif(last.mode == "circle_centered"):
+        form.rb_cent_circle.toggle()
+    form.springtype = last.mode
+
+except (FileNotFoundError, pyException):
+    pass    #   Default values are used.
+finally:
+    form.exec()
+    last = Spring(form.ds_wd.value(), form.ds_r.value(), form.ds_h.value(), form.ds_bh.value(), form.ds_re.value(), form.ds_p.value(), form.ds_ch.value(), form.springtype)
+    spring_to_json(last)
+
+
+
 
 
 if(form.success):
@@ -452,7 +514,6 @@ if(form.success):
 
         for item in links:
             item.Placement.Base.z += wire_diameter/2 - height/2
-            print(f"{item.Label}: {item.Placement.Base.z}")
 
 
         compound = doc.addObject("Part::Compound", "springCompound")

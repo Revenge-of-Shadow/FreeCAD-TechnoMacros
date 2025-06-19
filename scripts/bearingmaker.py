@@ -2,7 +2,6 @@ from PySide import QtCore, QtGui
 import Part
 import math
 from FreeCAD import Base
-
 import json
 
 filename = "last_bearing.json"
@@ -26,6 +25,9 @@ def bearing_from_json():
     with open(filename, "r") as file:
         data = json.load(file)
         return Bearing(data["inner_r"], data["outer_R"], data["height"], data["ball_amount"])
+
+'''                     Class code end                        '''
+'''==========================================================='''
 
 '''==========================================================='''
 '''                     Modelling code                        '''
@@ -181,6 +183,8 @@ class GuiClass(QtGui.QDialog):
         self.show()
 
 form = GuiClass()
+'''               Graphical user interface end                '''
+'''==========================================================='''
 
 try:
     last = bearing_from_json()
@@ -196,8 +200,6 @@ finally:
     form.exec()
     last = Bearing(form.ds_id.value(), form.ds_od.value(), form.ds_h.value(), form.s_b.value())
     bearing_to_json(last)
-'''               Graphical user interface end                '''
-'''==========================================================='''
 
 
 
