@@ -44,7 +44,7 @@ def makeBearing(bearing):
     inner_R = middle_r-ball_r/2
     outer_r = middle_r+ball_r/2
 
-    fillet_r = 0.1
+    fillet_r = ball_r/4
 
 # Ball center as offset.
     ball_hoffset = ((outer_r - inner_R)/2 + inner_R)

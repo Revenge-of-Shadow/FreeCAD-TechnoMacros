@@ -8,7 +8,8 @@
 0. Requirements
 1. Spring maker
 2. Gear maker
-3. Copyleft
+3. Bearing maker 
+4. Copyleft
 
 
 ## 0. Requirements
@@ -74,7 +75,18 @@ A program that forms cogwheels by data provided by a user.
 **Distance between peaks**: calculated value; distance between one endpoint and another. May be not quite correct with **angle offset modifier** different from 1.
 
 
-## 3. Copyleft
+## 5. Bearing maker
+![Bearing screenshot](./pictures/screenshots/Bearingmaker.png)
+
+### 5.1. What's this?
+A program that creates models of ball bearings.
+Code originates from https://wiki.freecad.org/Scripted_Parts:_Ball_Bearing_-_Part_2.
+
+### 5.2. What's that?
+![Bearing dimensions](./pictures/screenshots/bearing.svg)
+
+
+## 4. Copyleft
 
 I allow usage and alternation of these scripts with or without my consent. 
 I prohibit proclaims of ownership of this code by anyone other than me.
