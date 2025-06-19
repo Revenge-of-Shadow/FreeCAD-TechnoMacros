@@ -83,7 +83,7 @@ A program that creates models of ball bearings.
 Code originates from https://wiki.freecad.org/Scripted_Parts:_Ball_Bearing_-_Part_2.
 
 ### 5.2. What's that?
-![Bearing dimensions](./pictures/screenshots/bearing.svg)
+![Bearing dimensions](./pictures/screenshots/bearing.png)
 
 
 ## 4. Copyleft
