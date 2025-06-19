@@ -3,7 +3,7 @@ import FreeCAD as App
 import math
 import json
 
-filename = "gearwheel.json"
+filename = "last_gearwheel.json"
 '''==========================================================='''
 '''                       Class  code                         '''
 def obj_dict(obj):

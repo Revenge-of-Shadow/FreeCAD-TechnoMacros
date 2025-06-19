@@ -3,6 +3,30 @@ import Part
 import math
 from FreeCAD import Base
 
+import json
+
+filename = "last_bearing.json"
+'''==========================================================='''
+'''                       Class  code                         '''
+def obj_dict(obj):
+    return obj.__dict__
+
+class Bearing:
+    def __init__(self, inner_r, outer_R, height, ball_amount):
+        self.inner_r = inner_r
+        self.outer_R = outer_R
+        self.height = height
+        self.ball_amount = ball_amount
+
+def bearing_to_json(obj):
+    with open(filename, "w") as file:
+        json.dump(obj, file, default = obj_dict)
+
+def bearing_from_json():
+    with open(filename, "r") as file:
+        data = json.load(file)
+        return Bearing(data["inner_r"], data["outer_R"], data["height"], data["ball_amount"])
+
 '''==========================================================='''
 '''                     Modelling code                        '''
 def makeBearing(inner_r, outer_R, thick, ball_amount):
@@ -104,7 +128,7 @@ class GuiClass(QtGui.QDialog):
         if(self.areValuesBad()):
             self.callInformation()
             return
-        makeBearing(self.ds_id.value()/2, self.ds_od.value()/2, self.s_h.value(), self.s_b.value())
+        makeBearing(self.ds_id.value()/2, self.ds_od.value()/2, self.ds_h.value(), self.s_b.value())
         self.close()
 
     def onCancel(self):
@@ -133,10 +157,10 @@ class GuiClass(QtGui.QDialog):
 
         self.l_h = QtGui.QLabel("Height [mm]:", self)
         self.l_h.move(20, 120)
-        self.s_h = QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(box=self.s_h, max = 1000000, min = 1, step = 1, default = 6)
-        self.s_h.setFixedWidth(80)
-        self.s_h.move(220, 120)
+        self.ds_h = QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(box=self.ds_h, max = 1000000, min = 1, step = 1, default = 6)
+        self.ds_h.setFixedWidth(80)
+        self.ds_h.move(220, 120)
 
         self.l_b = QtGui.QLabel("Ball amount:", self)
         self.l_b.move(20, 170)
@@ -157,7 +181,21 @@ class GuiClass(QtGui.QDialog):
         self.show()
 
 form = GuiClass()
-form.exec()
+
+try:
+    last = bearing_from_json()
+    #   Reads from file.
+    #   Otherwise throws.
+    form.ds_id.setValue(last.inner_r)
+    form.ds_od.setValue(last.outer_R)
+    form.ds_h.setValue(last.height)
+    form.s_b.setValue(last.ball_amount)
+except FileNotFoundError:
+    pass    #   Default values are used.
+finally:
+    form.exec()
+    last = Bearing(form.ds_id.value(), form.ds_od.value(), form.ds_h.value(), form.s_b.value())
+    bearing_to_json(last)
 '''               Graphical user interface end                '''
 '''==========================================================='''
 
