@@ -188,7 +188,7 @@ form = GuiClass()
 
 try:
     last = bearing_from_json()
-    #   Reads from file.
+   #   Reads from file.
     #   Otherwise throws.
     form.ds_id.setValue(last.inner_r)
     form.ds_od.setValue(last.outer_R)
