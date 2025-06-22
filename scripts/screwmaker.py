@@ -89,6 +89,39 @@ def revolveSketchZ(body, sketch):
 
     return revolution
 
+
+def makePhillipsSketch(body, diameter, thickness):
+    sketch_drive = body.newObject('Sketcher::SketchObject', 'DriveSketch')
+    sketch_drive.AttachmentSupport = (doc.getObject('XY_Plane'),[''])
+    sketch_drive.MapMode = 'FlatFace'
+
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, diameter/2, 0), App.Vector(thickness/2, diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, diameter/2, 0), App.Vector(thickness/2, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, thickness/2, 0), App.Vector(diameter/2, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(diameter/2, thickness/2, 0), App.Vector(diameter/2, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(diameter/2, -thickness/2, 0), App.Vector(thickness/2, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, -thickness/2, 0), App.Vector(thickness/2, -diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, -diameter/2, 0), App.Vector(-thickness/2, -diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, -diameter/2, 0), App.Vector(-thickness/2, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, -thickness/2, 0), App.Vector(-diameter/2, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-diameter/2, -thickness/2, 0), App.Vector(-diameter/2, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-diameter/2, thickness/2, 0), App.Vector(-thickness/2, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, thickness/2, 0), App.Vector(-thickness/2, diameter/2, 0)), False)
+    sketch_drive.Visibility = False
+    
+    return sketch_drive
+
+
+def subtractDrive(body, sketch, height):
+    pocket_drive = body.newObject('PartDesign::Pocket', 'DrivePocket')
+    sketch.AttachmentOffset = App.Placement(App.Vector(0, 0, -height), App.Rotation(0,0,0))
+    pocket_drive.Profile = (sketch, ['',])
+    pocket_drive.Length = height/2          #   Possibly can be made customizable but eh.
+    pocket_drive.ReferenceAxis = (sketch, ['N_Axis'])
+    pocket_drive.Reversed = 1
+
+    return pocket_drive
+
 '''==================================================================================='''
 '''                             Modelling functions end                               '''
 '''==================================================================================='''
@@ -105,6 +138,8 @@ length = 10
 pitch = wire_diameter + wire_diameter/2
 head_height = 2
 head_diameter = 5
+drive_diameter = head_diameter/2
+drive_thickness = wire_diameter
 
 
 body = None
@@ -118,4 +153,5 @@ makeCylinderPad(body, diameter, length)
 makeSubtractiveHelix(body, length, diameter, wire_diameter, pitch)
 #revolveSketchZ(body, makeHeadConeSketch(body, diameter, head_diameter, head_height))
 revolveSketchZ(body, makeHeadShroomSketch(body, head_diameter, head_height, length/2))
+subtractDrive(body, makePhillipsSketch(body, drive_diameter, drive_thickness), head_height)
 doc.recompute()
