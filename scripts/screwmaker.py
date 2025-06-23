@@ -1,5 +1,7 @@
 import math
 import json
+from PySide import QtGui
+
 filename = "last_screw.json"
 '''==================================================================================='''
 '''                                       Class                                       '''
@@ -20,7 +22,7 @@ class Screw:
         self.head_type          =   head_type
         self.drive_type         =   drive_type
 
-def screw_to_json(screw):
+def screw_to_json(obj):
     with open(filename, "w") as file:
         json.dump(obj, file, default = obj_dict)
 
@@ -206,9 +208,101 @@ def subtractDrive(body, sketch, height):
 
     return pocket_drive
 
+
+def makeScrew(screw):
+    return
 '''==================================================================================='''
 '''                             Modelling functions end                               '''
 '''==================================================================================='''
+'''==================================================================================='''
+'''                                     Interface                                     '''
+'''==================================================================================='''
+class GuiClass(QtGui.QDialog):
+    def __init__(self, screw):
+        super(GuiClass, self).__init__()
+        self.screw = screw
+        self.initUI()
+    
+    def setupSpinBox(self, box, max, min = 0, step = 1, default = 0, width = 80, offset_multiplier = 0):
+        box.setRange(min, max)
+        box.setSingleStep(step)
+        box.setValue(default)
+        box.setFixedWidth(width)
+        box.move(220, 20+50*offset_multiplier)
+
+
+    def areValuesBad(self):
+        return false
+    
+
+    def onMake(self):
+        makeScrew(self.screw)
+
+    def onQuit(self):
+        self.close()
+
+
+    def putLabel(self, varname, text, offset_multiplier):
+        exec(f"self.l_{varname} = QtGui.QLabel(\"{text}\", self)")
+        exec(f"self.l_{varname}.move(20, 20+50*{offset_multiplier})")
+    
+
+    def initUI(self):
+        self.setFixedSize(320, 700)
+        self.setWindowTitle("Nya")
+
+        ##  Labels and inputs
+        self.putLabel("d", "Screw diameter [mm]:", 0)
+        self.ds_d   =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_d, max = 100000, min = 0, step = 0.1, default = self.screw.diameter, offset_multiplier = 0)
+
+        self.putLabel("rd", "Root diameter [mm]:", 1)
+        self.ds_rd  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_rd, max = 100000, step = 0.1, default = self.screw.diameter-self.screw.wire_diameter, offset_multiplier = 1)
+
+        self.putLabel("l", "Thread length [mm]:",  2)
+        self.ds_l   =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_l, max = 100000, step = 1, default = self.screw.length, offset_multiplier =  2)
+
+        self.putLabel("p", "Pitch [mm]:", 3)
+        self.ds_p   =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_p, max = 100000, step = 0.1, default = self.screw.pitch, offset_multiplier = 3)
+
+        self.putLabel("ht", "Head type:", 5)
+
+
+        self.putLabel("hh", "Head length [mm]:", 6)
+        self.ds_hh  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_hh, max = 100000, step = 1, default = self.screw.head_height, offset_multiplier = 6)
+
+        self.putLabel("hd", "Head diameter [mm]:", 7)
+        self.ds_hd    =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_hd, max = 100000, step = 1, default = self.screw.head_diameter, offset_multiplier = 7)
+
+        self.putLabel("dt", "Drive type:", 9)
+
+        self.putLabel("dd", "Drive diameter [mm]:", 10)
+        self.ds_dd    =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_dd, max = 100000, step = 1, default = self.screw.drive_diameter, offset_multiplier = 10)
+
+        self.putLabel("dt", "Drive thickness [mm]:", 11)
+        self.ds_dt    =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_dt, max = 100000, step = 0.1, default = self.screw.drive_thickness, offset_multiplier = 11)
+        ##  Labels and inputs end
+        self.b_q = QtGui.QPushButton("Quit", self)
+        self.b_q.clicked.connect(self.onQuit)
+        self.b_q.move(20, 20+50*12.5)
+
+        self.b_m = QtGui.QPushButton("Make the screw", self)
+        self.b_m.clicked.connect(self.onMake)
+        self.b_m.move(190, 20+50*12.5) 
+
+        self.show()
+'''==================================================================================='''
+'''                                   Interface end                                   '''
+'''==================================================================================='''
+
+
 
 doc = App.activeDocument()
 
@@ -216,7 +310,18 @@ if(doc is None):
     QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
     close()
 
+wire_diameter = 0.5
+diameter = 3
+length = 10
+pitch = wire_diameter + wire_diameter/2
+head_height = 2
+head_diameter = 5
+drive_diameter = head_diameter/2
+drive_thickness = wire_diameter
+head_type = "Mushroom"
+drive_type = "Phillips"
 
+last = Screw(wire_diameter, diameter, length, pitch, head_height, head_diameter, drive_diameter, drive_thickness, head_type, drive_type)
 
 
 try:
@@ -225,28 +330,9 @@ try:
     #   Otherwise throws.
 except  FileNotFoundError:
     #   Default values are used.
-    wire_diameter = 0.5
-    diameter = 3
-    length = 10
-    pitch = wire_diameter + wire_diameter/2
-    head_height = 2
-    head_diameter = 5
-    drive_diameter = head_diameter/2
-    drive_thickness = wire_diameter
-    head_type = "Mushroom"
-    drive_type = "Phillips"
-
-    last = Screw(wire_diameter, diameter, length, pitch, head_height, head_diameter, drive_diameter, drive_thickness, head_type, drive_type)
+    pass
 finally:
-    body = remakeBody(doc, None) 
-
-
-    makeCylinderPad(body, diameter, length)
-    makeSubtractiveHelix(body, length, diameter, wire_diameter, pitch)
-    #revolveSketchZ(body, makeHeadConeSketch(body, diameter, head_diameter, head_height))
-    revolveSketchZ(body, makeHeadShroomSketch(body, head_diameter, head_height, length/2))
-    subtractDrive(body, makeSlitSketch(body, drive_diameter, drive_thickness), head_height)
-    doc.recompute()
-
-   screw_to_json(last)
+    form = GuiClass(last)
+    form.exec()
+    screw_to_json(form.screw)
 
