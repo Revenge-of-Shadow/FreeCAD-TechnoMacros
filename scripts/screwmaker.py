@@ -1,4 +1,37 @@
 import math
+import json
+filename = "last_screw.json"
+'''==================================================================================='''
+'''                                       Class                                       '''
+'''==================================================================================='''
+def obj_dict(obj):
+    return obj.__dict__
+
+class Screw:
+    def __init__(self, wire_diameter, diameter, length, pitch, head_height, head_diameter, drive_diameter, drive_thickness, head_type, drive_type):
+        self.wire_diameter      =   wire_diameter
+        self.diameter           =   diameter
+        self.length             =   length
+        self.pitch              =   pitch
+        self.head_height        =   head_height
+        self.head_diameter      =   head_diameter
+        self.drive_diameter     =   drive_diameter
+        self.drive_thickness    =   drive_thickness
+        self.head_type          =   head_type
+        self.drive_type         =   drive_type
+
+def screw_to_json(screw):
+    with open(filename, "w") as file:
+        json.dump(obj, file, default = obj_dict)
+
+def screw_from_json():
+    with open(filename, "r") as file:
+        data = json.load(file)
+        return Screw(data["wire_diameter"], data["diameter"], data["length"], data["pitch"], data["head_height"], data["head_diameter"], data["drive_diameter"], data["drive_thickness"], data["head_type"], data["drive_type"]) 
+
+'''==================================================================================='''
+'''                                     Class end                                     '''
+'''==================================================================================='''
 '''==================================================================================='''
 '''                                Modelling functions                                '''
 '''==================================================================================='''
@@ -172,6 +205,15 @@ if(doc is None):
     QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
     close()
 
+try:
+    last = screw_from_json()
+    #   Reads from file.
+    #   Otherwise throws.
+except  FileNotFoundError:
+    pass    #   Default values are used.
+finally:
+    screw_to_json(last)
+
 wire_diameter = 0.5
 diameter = 3
 length = 10
@@ -195,3 +237,5 @@ makeSubtractiveHelix(body, length, diameter, wire_diameter, pitch)
 revolveSketchZ(body, makeHeadShroomSketch(body, head_diameter, head_height, length/2))
 subtractDrive(body, makeSlitSketch(body, drive_diameter, drive_thickness), head_height)
 doc.recompute()
+
+
