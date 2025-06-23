@@ -35,6 +35,17 @@ def screw_from_json():
 '''==================================================================================='''
 '''                                Modelling functions                                '''
 '''==================================================================================='''
+def removeBody(doc, body):
+    body.removeObjectsFromDocument()
+    doc.removeOvject(body)
+    body = None
+
+def remakeBody(doc, body):
+    if(body is not None):
+        removeBody(doc, body)
+    return doc.addObject('PartDesign::Body','ScrewBody')
+
+
 def makeCylinderPad(body, diameter, length):
     sketch_cylinder = body.newObject('Sketcher::SketchObject','CylinderSketch')
     sketch_cylinder.AttachmentSupport = (doc.getObject('XY_Plane'),[''])
@@ -205,37 +216,37 @@ if(doc is None):
     QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
     close()
 
+
+
+
 try:
     last = screw_from_json()
     #   Reads from file.
     #   Otherwise throws.
 except  FileNotFoundError:
-    pass    #   Default values are used.
+    #   Default values are used.
+    wire_diameter = 0.5
+    diameter = 3
+    length = 10
+    pitch = wire_diameter + wire_diameter/2
+    head_height = 2
+    head_diameter = 5
+    drive_diameter = head_diameter/2
+    drive_thickness = wire_diameter
+    head_type = "Mushroom"
+    drive_type = "Phillips"
+
+    last = Screw(wire_diameter, diameter, length, pitch, head_height, head_diameter, drive_diameter, drive_thickness, head_type, drive_type)
 finally:
-    screw_to_json(last)
-
-wire_diameter = 0.5
-diameter = 3
-length = 10
-pitch = wire_diameter + wire_diameter/2
-head_height = 2
-head_diameter = 5
-drive_diameter = head_diameter/2
-drive_thickness = wire_diameter
+    body = remakeBody(doc, None) 
 
 
-body = None
-if(body is None):
-    body = doc.addObject('PartDesign::Body','ScrewBody')
-else:
-    body.removeObjectsFromDocument()
+    makeCylinderPad(body, diameter, length)
+    makeSubtractiveHelix(body, length, diameter, wire_diameter, pitch)
+    #revolveSketchZ(body, makeHeadConeSketch(body, diameter, head_diameter, head_height))
+    revolveSketchZ(body, makeHeadShroomSketch(body, head_diameter, head_height, length/2))
+    subtractDrive(body, makeSlitSketch(body, drive_diameter, drive_thickness), head_height)
+    doc.recompute()
 
-
-makeCylinderPad(body, diameter, length)
-makeSubtractiveHelix(body, length, diameter, wire_diameter, pitch)
-#revolveSketchZ(body, makeHeadConeSketch(body, diameter, head_diameter, head_height))
-revolveSketchZ(body, makeHeadShroomSketch(body, head_diameter, head_height, length/2))
-subtractDrive(body, makeSlitSketch(body, drive_diameter, drive_thickness), head_height)
-doc.recompute()
-
+   screw_to_json(last)
 
