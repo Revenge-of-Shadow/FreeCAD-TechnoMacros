@@ -42,7 +42,7 @@ def screw_from_json():
 '''==================================================================================='''
 def removeBody(doc, body):
     body.removeObjectsFromDocument()
-    doc.removeOvject(body)
+    doc.removeObject(body.Name)
     body = None
 
 def remakeBody(doc, body):
@@ -221,17 +221,20 @@ def makeScrew(screw):
     makeSubtractiveHelix(body, screw.length, screw.diameter, screw.wire_diameter, screw.pitch)
 
     sketch = None
-    if(screw.head_type == head_types[0]):    #   Shroom
-        sketch = makeHeadShroomSketch(body, screw.head_diameter, screw.head_height, screw.length/2)
-    elif(screw.head_type == head_types[1]):
+    if(screw.head_type == head_types[0]):    
         sketch = makeHeadConeSketch(body, screw.diameter, screw.head_diameter, screw.head_height)
+    elif(screw.head_type == head_types[1]):
+        sketch = makeHeadShroomSketch(body, screw.head_diameter, screw.head_height, screw.length/2)
     if(sketch is not None):
         revolveSketchZ(body, sketch)
     
     sketch = None
-    if(screw.drive_type == drive_types[0]):     #   Slit
+    if(screw.drive_type == drive_types[0]):     
         sketch = makeSlitSketch(body, screw.drive_diameter, screw.drive_thickness)
-
+    elif(screw.drive_type == drive_types[1]):     
+        sketch = makeFrearsonSketch(body, screw.drive_diameter, screw.drive_thickness)
+    elif(screw.drive_type == drive_types[2]):     
+        sketch = makePhillipsSketch(body, screw.drive_diameter, screw.drive_thickness)
     if(sketch is not None):
         subtractDrive(body, sketch, screw.head_height/2)
 
@@ -271,6 +274,7 @@ class GuiClass(QtGui.QDialog):
         makeScrew(self.screw)
 
     def onQuit(self):
+        self.screw = Screw(self.ds_d.value()-self.ds_rd.value(), self.ds_d.value(), self.ds_l.value(), self.ds_p.value(), self.ds_hh.value(), self.ds_hd.value(), self.ds_dd.value(), self.ds_dt.value(), self.c_ht.currentText(), self.c_dt.currentText())
         self.close()
 
 
