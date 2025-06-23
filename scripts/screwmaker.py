@@ -90,6 +90,20 @@ def revolveSketchZ(body, sketch):
     return revolution
 
 
+def makeSlitSketch(body, diameter, thickness):
+    sketch_drive = body.newObject('Sketcher::SketchObject', 'DriveSketch')
+    sketch_drive.AttachmentSupport = (doc.getObject('XY_Plane'),[''])
+    sketch_drive.MapMode = 'FlatFace'
+
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, diameter/2, 0), App.Vector(thickness/2, diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, diameter/2, 0), App.Vector(thickness/2, -diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, -diameter/2, 0), App.Vector(-thickness/2, -diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, -diameter/2, 0), App.Vector(-thickness/2, diameter/2, 0)), False)
+    sketch_drive.Visibility = False
+    
+    return sketch_drive
+
+
 def makeFrearsonSketch(body, diameter, thickness):
     sketch_drive = body.newObject('Sketcher::SketchObject', 'DriveSketch')
     sketch_drive.AttachmentSupport = (doc.getObject('XY_Plane'),[''])
@@ -179,5 +193,5 @@ makeCylinderPad(body, diameter, length)
 makeSubtractiveHelix(body, length, diameter, wire_diameter, pitch)
 #revolveSketchZ(body, makeHeadConeSketch(body, diameter, head_diameter, head_height))
 revolveSketchZ(body, makeHeadShroomSketch(body, head_diameter, head_height, length/2))
-subtractDrive(body, makePhillipsSketch(body, drive_diameter, drive_thickness), head_height)
+subtractDrive(body, makeSlitSketch(body, drive_diameter, drive_thickness), head_height)
 doc.recompute()
