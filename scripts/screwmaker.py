@@ -90,7 +90,7 @@ def revolveSketchZ(body, sketch):
     return revolution
 
 
-def makePhillipsSketch(body, diameter, thickness):
+def makeFrearsonSketch(body, diameter, thickness):
     sketch_drive = body.newObject('Sketcher::SketchObject', 'DriveSketch')
     sketch_drive.AttachmentSupport = (doc.getObject('XY_Plane'),[''])
     sketch_drive.MapMode = 'FlatFace'
@@ -107,6 +107,32 @@ def makePhillipsSketch(body, diameter, thickness):
     sketch_drive.addGeometry(Part.LineSegment(App.Vector(-diameter/2, -thickness/2, 0), App.Vector(-diameter/2, thickness/2, 0)), False)
     sketch_drive.addGeometry(Part.LineSegment(App.Vector(-diameter/2, thickness/2, 0), App.Vector(-thickness/2, thickness/2, 0)), False)
     sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, thickness/2, 0), App.Vector(-thickness/2, diameter/2, 0)), False)
+    sketch_drive.Visibility = False
+    
+    return sketch_drive
+
+
+def makePhillipsSketch(body, diameter, thickness):
+    sketch_drive = body.newObject('Sketcher::SketchObject', 'DriveSketch')
+    sketch_drive.AttachmentSupport = (doc.getObject('XY_Plane'),[''])
+    sketch_drive.MapMode = 'FlatFace'
+
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, diameter/2, 0), App.Vector(thickness/2, diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, diameter/2, 0), App.Vector(thickness/2, thickness, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, thickness, 0), App.Vector(thickness, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness, thickness/2, 0), App.Vector(diameter/2, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(diameter/2, thickness/2, 0), App.Vector(diameter/2, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(diameter/2, -thickness/2, 0), App.Vector(thickness, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness, -thickness/2, 0), App.Vector(thickness/2, -thickness, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, -thickness, 0), App.Vector(thickness/2, -diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(thickness/2, -diameter/2, 0), App.Vector(-thickness/2, -diameter/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, -diameter/2, 0), App.Vector(-thickness/2, -thickness, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, -thickness, 0), App.Vector(-thickness, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness, -thickness/2, 0), App.Vector(-diameter/2, -thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-diameter/2, -thickness/2, 0), App.Vector(-diameter/2, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-diameter/2, thickness/2, 0), App.Vector(-thickness, thickness/2, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness, thickness/2, 0), App.Vector(-thickness/2, thickness, 0)), False)
+    sketch_drive.addGeometry(Part.LineSegment(App.Vector(-thickness/2, thickness, 0), App.Vector(-thickness/2, diameter/2, 0)), False)
     sketch_drive.Visibility = False
     
     return sketch_drive
