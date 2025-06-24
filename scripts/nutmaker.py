@@ -11,12 +11,14 @@ def obj_dict(obj):
     return obj.__dict__
 
 class Nut:
-    def __init__(self, wire_diameter, diameter_outer, diameter_inner, length, edges):
+    def __init__(self, wire_diameter, diameter_outer, diameter_inner, length, edges, pitch):
         self.wire_diameter  =   wire_diameter
-        self.diameter_outer       =   diameter_outer
-        self.diameter_inner       =   diameter_inner
+        self.diameter_outer =   diameter_outer
+        self.diameter_inner =   diameter_inner
         self.length         =   length
         self.edges          =   edges
+        self.edges          =   edges
+        self.pitch          =   pitch
     
 def nut_to_json(obj):
     with open(filename, "w") as file:
@@ -25,9 +27,7 @@ def nut_to_json(obj):
 def nut_from_json():
     with open(filename, "r") as file:
         data = json.load(file)
-        print(data)
-        return  Nut(data["wire_diameter"], data["diameter_outer"], data["diameter_inner"], data["length"], data["edges"])
-
+        return  Nut(data["wire_diameter"], data["diameter_outer"], data["diameter_inner"], data["length"], data["edges"], data["pitch"])
 '''==================================================================================='''
 '''                                     Class end                                     '''
 '''==================================================================================='''
@@ -42,7 +42,7 @@ def removeBody(doc, body):
 def remakeBody(doc, body):
     if(body is not None):
         removeBody(doc, body)
-    return doc.addObject('PartDesign::Body','ScrewBody')
+    return doc.addObject('PartDesign::Body','NutBody')
 
 
 def makeNutPad(body, diameter_outer, diameter_inner, length, edges):
@@ -53,7 +53,7 @@ def makeNutPad(body, diameter_outer, diameter_inner, length, edges):
     sketch_nut.addGeometry(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), diameter_inner/2),False)
 
     angle_step = math.pi*2/edges
-    for i in range(edges-1):
+    for i in range(edges):
         sketch_nut.addGeometry(Part.LineSegment(
                                App.Vector(math.cos(angle_step*i)*diameter_outer, math.sin(angle_step*i)*diameter_outer, 0),
                                App.Vector(math.cos(angle_step*(i+1))*diameter_outer, math.sin(angle_step*(i+1))*diameter_outer, 0)
@@ -107,7 +107,7 @@ def makeNut(nut):
     body    =   remakeBody(doc, body)
 
     makeNutPad(body, nut.diameter_outer, nut.diameter_inner, nut.length, nut.edges)
-    makeSubtractiveHelix(body, nut.length, nut.diameter, nut.wire_diameter, nut.pitch)
+    makeSubtractiveHelix(body, nut.length, nut.diameter_inner, nut.wire_diameter, nut.pitch)
 
     doc.recompute()
 
@@ -118,7 +118,106 @@ def makeNut(nut):
 '''==================================================================================='''
 '''                                     Interface                                     '''
 '''==================================================================================='''
+class   GuiClass(QtGui.QDialog):
+    def __init__(self, nut):
+        super(GuiClass, self).__init__()
+        self.nut = nut
+        self.initUI()
+
+    def setupSpinBox(self, box, max, min = 0, step = 1, default = 0, width = 80, offset_multiplier = 0):
+        box.setRange(min, max)
+        box.setSingleStep(step)
+        box.setValue(default)
+        box.setFixedWidth(width)
+        box.move(220, 20+50*offset_multiplier)
+
+    def putLabel(self, varname, text, offset_multiplier):
+        exec(f"self.l_{varname} = QtGui.QLabel(\"{text}\", self)")
+        exec(f"self.l_{varname}.move(20, 20+50*{offset_multiplier})")
 
 
+    def areValuesBad(self):
+        return False
+
+    
+    def onMake(self):
+        if(not self.areValuesBad()):
+            self.nut = Nut(self.ds_di.value()-self.ds_dr.value(), self.ds_do.value(), self.ds_di.value(), self.ds_l.value(), self.s_e.value(), self.ds_p.value())
+            makeNut(self.nut)
+
+    def onQuit(self):
+        if(not self.areValuesBad()):
+            self.nut = Nut(self.ds_di.value()-self.ds_dr.value(), self.ds_do.value(), self.ds_di.value(), self.ds_l.value(), self.s_e.value(), self.ds_p.value())
+        self.close()
 
 
+    def initUI(self):
+        self.setGeometry(250, 250, 320, 400)
+        self.setFixedSize(320, 480)
+        self.setWindowTitle("Nya")
+
+        ##  Labels and inputs
+        self.putLabel("do", "Outer diameter [mm]:", 0)
+        self.ds_do  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_do, max = 100000, min = 0, step = 1, default = self.nut.diameter_outer, offset_multiplier = 0)
+
+        self.putLabel("di", "Inner diameter [mm]:", 1)
+        self.ds_di  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_di, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner, offset_multiplier = 1)
+
+        self.putLabel("do", "Root diameter [mm]:",  2)
+        self.ds_dr  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_dr, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner+self.nut.wire_diameter, offset_multiplier =  2)
+
+        self.putLabel("l", "Thickness [mm]:", 3)
+        self.ds_l  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_l, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner, offset_multiplier = 3)
+
+        self.putLabel("e", "Edges:", 4)
+        self.s_e  =   QtGui.QSpinBox(self)
+        self.setupSpinBox(self.s_e, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner, offset_multiplier = 4)
+    
+        self.putLabel("p", "Pitch [mm]:", 5)
+        self.ds_p  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_p, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner, offset_multiplier = 5)
+     ##  Labels and inputs end
+        self.b_q = QtGui.QPushButton("Quit", self)
+        self.b_q.clicked.connect(self.onQuit)
+        self.b_q.move(20, 20+50*7)
+
+        self.b_m = QtGui.QPushButton("Make the nut", self)
+        self.b_m.clicked.connect(self.onMake)
+        self.b_m.move(190, 20+50*7) 
+
+        self.show()
+'''==================================================================================='''
+'''                                   Interface end                                   '''
+'''==================================================================================='''
+doc = App.activeDocument()
+
+if(doc is None):
+    QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
+    close()
+
+wire_diameter = 0.5
+diameter_outer = 5
+diameter_inner = 3
+length = 2
+edges = 6
+pitch = wire_diameter + wire_diameter/2
+
+last = Nut(wire_diameter, diameter_outer, diameter_inner, length, edges, pitch)
+
+body = None
+
+try:
+    last = nut_from_json()
+    #   Reads the file.
+    #   Otherwise throws.
+except  FileNotFoundError:
+    #   Default values are used.
+    pass
+finally:
+    form = GuiClass(last)
+    form.exec()
+    nut_to_json(form.nut)
