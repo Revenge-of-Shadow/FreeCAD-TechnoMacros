@@ -224,7 +224,7 @@ def makeScrew(screw):
     if(screw.head_type == head_types[0]):    
         sketch = makeHeadConeSketch(body, screw.diameter, screw.head_diameter, screw.head_height)
     elif(screw.head_type == head_types[1]):
-        sketch = makeHeadShroomSketch(body, screw.head_diameter, screw.head_height, screw.length/2)
+        sketch = makeHeadShroomSketch(body, screw.head_diameter, screw.head_height, screw.head_height*4)
     if(sketch is not None):
         revolveSketchZ(body, sketch)
     
@@ -279,6 +279,7 @@ class GuiClass(QtGui.QDialog):
 
 
     def initUI(self):
+        self.setGeometry(250, 250, 320, 400)
         self.setFixedSize(320, 700)
         self.setWindowTitle("Nya")
 
@@ -359,8 +360,8 @@ head_height = 2
 head_diameter = 5
 drive_diameter = head_diameter/2
 drive_thickness = wire_diameter
-head_type = "Mushroom"
-drive_type = "Phillips"
+head_type = head_types[0]
+drive_type = drive_types[0]
 
 last = Screw(wire_diameter, diameter, length, pitch, head_height, head_diameter, drive_diameter, drive_thickness, head_type, drive_type)
 
