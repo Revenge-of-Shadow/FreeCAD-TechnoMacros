@@ -224,7 +224,7 @@ def makeScrew(screw):
     if(screw.head_type == head_types[0]):    
         sketch = makeHeadConeSketch(body, screw.diameter, screw.head_diameter, screw.head_height)
     elif(screw.head_type == head_types[1]):
-        sketch = makeHeadShroomSketch(body, screw.head_diameter, screw.head_height, screw.head_height*4)
+        sketch = makeHeadShroomSketch(body, screw.head_diameter, screw.head_height, screw.curve_radius)
     if(sketch is not None):
         revolveSketchZ(body, sketch)
     
@@ -269,13 +269,33 @@ class GuiClass(QtGui.QDialog):
         return false
     
 
+    def updateScrew(self):
+        wire_diameter   =   self.ds_d.value()-self.ds_rd.value()
+        diameter        =   self.ds_d.value()
+        length          =   self.ds_l.value()
+        pitch           =   self.ds_p.value()*wire_diameter
+        head_height     =   self.ds_hh.value()
+        head_diameter   =   self.ds_hd.value()
+        drive_diameter  =   self.ds_dd.value()
+        drive_thickness =   self.ds_dt.value()
+        head_type       =   self.c_ht.currentText()
+        drive_type      =   self.c_dt.currentText()
+
+        self.screw = Screw(wire_diameter, diameter, length, pitch, head_height, head_diameter, drive_diameter, drive_thickness, head_type, drive_type)
+        if(head_type == head_types[1]):
+            self.screw.curve_radius = self.ds_cr.value()
+
+
     def onMake(self):
-        self.screw = Screw(self.ds_d.value()-self.ds_rd.value(), self.ds_d.value(), self.ds_l.value(), self.ds_p.value(), self.ds_hh.value(), self.ds_hd.value(), self.ds_dd.value(), self.ds_dt.value(), self.c_ht.currentText(), self.c_dt.currentText())
+        self.updateScrew()
         makeScrew(self.screw)
 
     def onQuit(self):
-        self.screw = Screw(self.ds_d.value()-self.ds_rd.value(), self.ds_d.value(), self.ds_l.value(), self.ds_p.value(), self.ds_hh.value(), self.ds_hd.value(), self.ds_dd.value(), self.ds_dt.value(), self.c_ht.currentText(), self.c_dt.currentText())
+        self.updateScrew()
         self.close()
+
+    def onDiameterChanged(self):
+        self.ds_rd.setValue(self.ds_d.value() - self.screw.wire_diameter)
 
 
     def initUI(self):
@@ -287,6 +307,7 @@ class GuiClass(QtGui.QDialog):
         self.putLabel("d", "Screw diameter [mm]:", 0)
         self.ds_d   =   QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(self.ds_d, max = 100000, min = 0, step = 0.1, default = self.screw.diameter, offset_multiplier = 0)
+        self.ds_d.valueChanged[float].connect(self.onDiameterChanged)
 
         self.putLabel("rd", "Root diameter [mm]:", 1)
         self.ds_rd  =   QtGui.QDoubleSpinBox(self)
@@ -296,9 +317,9 @@ class GuiClass(QtGui.QDialog):
         self.ds_l   =   QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(self.ds_l, max = 100000, step = 1, default = self.screw.length, offset_multiplier =  2)
 
-        self.putLabel("p", "Pitch [mm]:", 3)
+        self.putLabel("p", "Pitch multiplier:", 3)
         self.ds_p   =   QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(self.ds_p, max = 100000, step = 0.1, default = self.screw.pitch, offset_multiplier = 3)
+        self.setupSpinBox(self.ds_p, max = 100000, min = 1, step = 0.1, default = self.screw.pitch/self.screw.wire_diameter, offset_multiplier = 3)
 
         self.putLabel("ht", "Head type:", 5)
         self.c_ht = QtGui.QComboBox(self)
@@ -314,6 +335,10 @@ class GuiClass(QtGui.QDialog):
         self.putLabel("hd", "Head diameter [mm]:", 7)
         self.ds_hd    =   QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(self.ds_hd, max = 100000, step = 1, default = self.screw.head_diameter, offset_multiplier = 7)
+
+        self.putLabel("cr", "Curve radius [mm]:", 8)
+        self.ds_cr    =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_cr, max = 100000, step = 1, min = 0.1, default = self.screw.head_diameter, offset_multiplier = 8)
 
         self.putLabel("dt", "Drive type:", 9)
         self.c_dt = QtGui.QComboBox(self)

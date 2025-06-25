@@ -55,8 +55,8 @@ def makeNutPad(body, diameter_outer, diameter_inner, length, edges):
     angle_step = math.pi*2/edges
     for i in range(edges):
         sketch_nut.addGeometry(Part.LineSegment(
-                               App.Vector(math.cos(angle_step*i)*diameter_outer, math.sin(angle_step*i)*diameter_outer, 0),
-                               App.Vector(math.cos(angle_step*(i+1))*diameter_outer, math.sin(angle_step*(i+1))*diameter_outer, 0)
+                               0.5*App.Vector(math.cos(angle_step*i)*diameter_outer, math.sin(angle_step*i)*diameter_outer, 0),
+                               0.5*App.Vector(math.cos(angle_step*(i+1))*diameter_outer, math.sin(angle_step*(i+1))*diameter_outer, 0)
                                 ), False)
     sketch_nut.Visibility = False
 
@@ -139,16 +139,29 @@ class   GuiClass(QtGui.QDialog):
     def areValuesBad(self):
         return False
 
+    def updateNut(self):
+        wire_diameter   =   self.ds_dt.value()-self.ds_di.value()
+        outer_diameter  =   self.ds_do.value()
+        inner_diameter  =   self.ds_di.value()
+        length          =   self.ds_l.value()
+        edges           =   self.s_e.value()
+        pitch           =   self.ds_p.value()*wire_diameter
+
+        self.nut    =   Nut(wire_diameter, outer_diameter, inner_diameter, length, edges, pitch)
+
     
     def onMake(self):
         if(not self.areValuesBad()):
-            self.nut = Nut(self.ds_di.value()-self.ds_dr.value(), self.ds_do.value(), self.ds_di.value(), self.ds_l.value(), self.s_e.value(), self.ds_p.value())
+            self.updateNut()
             makeNut(self.nut)
 
     def onQuit(self):
         if(not self.areValuesBad()):
-            self.nut = Nut(self.ds_di.value()-self.ds_dr.value(), self.ds_do.value(), self.ds_di.value(), self.ds_l.value(), self.s_e.value(), self.ds_p.value())
+            self.updateNut()
         self.close()
+    
+    def onTDiameterChanged(self):
+        self.ds_di.setValue(self.ds_dt.value() - self.nut.wire_diameter)
 
 
     def initUI(self):
@@ -161,13 +174,14 @@ class   GuiClass(QtGui.QDialog):
         self.ds_do  =   QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(self.ds_do, max = 100000, min = 0, step = 1, default = self.nut.diameter_outer, offset_multiplier = 0)
 
-        self.putLabel("di", "Inner diameter [mm]:", 1)
-        self.ds_di  =   QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(self.ds_di, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner, offset_multiplier = 1)
+        self.putLabel("dt", "Thread diameter [mm]:",  1)
+        self.ds_dt  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_dt, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner+self.nut.wire_diameter, offset_multiplier =  1)
+        self.ds_dt.valueChanged[float].connect(self.onTDiameterChanged)
 
-        self.putLabel("dr", "Root diameter [mm]:",  2)
-        self.ds_dr  =   QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(self.ds_dr, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner+self.nut.wire_diameter, offset_multiplier =  2)
+        self.putLabel("di", "Inner diameter [mm]:", 2)
+        self.ds_di  =   QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_di, max = 100000, min = 0, step = 1, default = self.nut.diameter_inner, offset_multiplier = 2)
 
         self.putLabel("l", "Thickness [mm]:", 3)
         self.ds_l  =   QtGui.QDoubleSpinBox(self)
@@ -175,11 +189,11 @@ class   GuiClass(QtGui.QDialog):
 
         self.putLabel("e", "Edges:", 4)
         self.s_e  =   QtGui.QSpinBox(self)
-        self.setupSpinBox(self.s_e, max = 100000, min = 0, step = 1, default = self.nut.edges, offset_multiplier = 4)
+        self.setupSpinBox(self.s_e, max = 100000, min = 3, step = 1, default = self.nut.edges, offset_multiplier = 4)
     
-        self.putLabel("p", "Pitch [mm]:", 5)
+        self.putLabel("p", "Pitch multiplier:", 5)
         self.ds_p  =   QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(self.ds_p, max = 100000, min = 0, step = 1, default = self.nut.pitch, offset_multiplier = 5)
+        self.setupSpinBox(self.ds_p, max = 100000, min = 1, step = 0.1, default = self.nut.pitch/self.nut.wire_diameter, offset_multiplier = 5)
      ##  Labels and inputs end
         self.b_q = QtGui.QPushButton("Quit", self)
         self.b_q.clicked.connect(self.onQuit)
@@ -187,7 +201,7 @@ class   GuiClass(QtGui.QDialog):
 
         self.b_m = QtGui.QPushButton("Make the nut", self)
         self.b_m.clicked.connect(self.onMake)
-        self.b_m.move(190, 20+50*7+20) 
+        self.b_m.move(190+20, 20+50*7) 
 
         self.show()
 '''==================================================================================='''
