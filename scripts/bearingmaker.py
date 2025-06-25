@@ -1,12 +1,11 @@
-from PySide import QtCore, QtGui
-import Part
+from PySide import  QtGui
 import math
-from FreeCAD import Base
 import json
 
 filename = "last_bearing.json"
 '''==========================================================='''
 '''                       Class  code                         '''
+'''==========================================================='''
 def obj_dict(obj):
     return obj.__dict__
 
@@ -26,12 +25,38 @@ def bearing_from_json():
         data = json.load(file)
         return Bearing(data["inner_r"], data["outer_R"], data["height"], data["ball_amount"])
 
+'''==========================================================='''
 '''                     Class code end                        '''
 '''==========================================================='''
 
 '''==========================================================='''
 '''                     Modelling code                        '''
-def makeBearing(bearing):
+'''==========================================================='''
+def removeBody(doc, body):
+    body.removeObjectsFromDocument()
+    doc.removeObject(body.Name)
+    body = None
+
+def remakeBody(doc, body):
+    if(body is not None):
+        removeBody(doc, body)
+    return  doc.addObject('PartDesign::Body', 'BearingBody')
+
+
+def revolveSketchZ(body, sketch):
+    revolution = body.newObject('PartDesign::Revolution', 'Revolution')
+    revolution.Profile = (sketch, ['',])
+    revolution.ReferenceAxis = (sketch, ['V_Axis'])
+    revolution.Angle = 360
+
+    return revolution
+
+
+def makeBearingBody(bearing):
+    global body
+    global doc
+    body    =   remakeBody(doc, body)
+
     inner_r = bearing.inner_r
     outer_R = bearing.outer_R
     height = bearing.height
@@ -44,72 +69,100 @@ def makeBearing(bearing):
     inner_R = middle_r-ball_r/2
     outer_r = middle_r+ball_r/2
 
-    fillet_r = ball_r/4
 
-# Ball center as offset.
-    ball_hoffset = ((outer_r - inner_R)/2 + inner_R)
-    ball_voffset = height / 2
+    sketch_bearing  =   body.newObject('Sketcher::SketchObject', 'BearingSketch')
+    sketch_bearing.AttachmentSupport    =   (doc.getObject('XZ_Plane'), [''])
+    sketch_bearing.MapMode  =   'FlatFace'
 
+    angle  =    math.acos((outer_r - middle_r)/ball_r)
 
+    ##  Inner half of the sketch
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(inner_r, -height/2, 0),
+                               App.Vector(inner_r, height/2, 0)
+                            ),  False)
 
-    o_line_1 = Part.makeLine((outer_R, 0, height - fillet_r), (outer_R, 0, fillet_r))
-    o_line_2 = Part.makeLine((outer_R - fillet_r, 0, 0), (outer_r+fillet_r, 0, 0))
-    o_line_3 = Part.makeLine((outer_r, 0, fillet_r), (outer_r, 0, height - fillet_r))
-    o_line_4 = Part.makeLine((outer_r + fillet_r, 0, height), (outer_R-fillet_r, 0, height))
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(inner_r, height/2, 0),
+                               App.Vector(inner_R, height/2, 0)
+                            ),  False)
 
-    o_rnding_1 = Part.makeCircle(fillet_r, Base.Vector(outer_R - fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 0, 90)
-    o_rnding_2 = Part.makeCircle(fillet_r, Base.Vector(outer_r + fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 90, 180)
-    o_rnding_3 = Part.makeCircle(fillet_r, Base.Vector(outer_r + fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 180, 270)
-    o_rnding_4 = Part.makeCircle(fillet_r, Base.Vector(outer_R - fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 270, 360)
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(inner_R, height/2, 0),
+                               App.Vector(inner_R, ball_r*math.sin(angle), 0)
+                            ),  False)
 
-    o_wire = Part.Wire([o_line_1, o_rnding_1, o_line_2, o_rnding_2, o_line_3, o_rnding_3, o_line_4, o_rnding_4])
-    o_wire = Part.Face(o_wire)
-    o_wire = o_wire.revolve(Base.Vector(0, 0, 1), Base.Vector(0, 0, 360))
-    o_circle = Part.makeCircle(ball_r, Base.Vector(ball_hoffset, 0, ball_voffset), Base.Vector(0, 1, 0), 0, 360)
-    o_circwire = Part.Wire([o_circle])
-    o_circwire = Part.Face(o_circwire)
-    o_circwire = o_circwire.revolve(Base.Vector(0, 0, 1), Base.Vector(0, 0, 360))
-    o_wire = o_wire.cut(o_circwire)
-    Part.show(o_wire)
+    sketch_bearing.addGeometry(Part.ArcOfCircle(
+        Part.Circle(App.Vector(middle_r, 0, 0), App.Vector(0, 0, 1), ball_r),
+        math.pi-angle, math.pi+angle)
+                               )
+    
 
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(inner_R, -ball_r*math.sin(angle), 0),
+                               App.Vector(inner_R, -height/2, 0)
+                            ),  False)
 
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(inner_R, -height/2, 0),
+                               App.Vector(inner_r, -height/2, 0)
+                            ),  False)
+    ##  Inner half of the sketch end
 
-    i_line_1 = Part.makeLine((inner_R, 0, height - fillet_r), (inner_R, 0, fillet_r))
-    i_line_2 = Part.makeLine((inner_R - fillet_r, 0, 0), (inner_r+fillet_r, 0, 0))
-    i_line_3 = Part.makeLine((inner_r, 0, fillet_r), (inner_r, 0, height - fillet_r))
-    i_line_4 = Part.makeLine((inner_r + fillet_r, 0, height), (inner_R - fillet_r, 0, height))
+    ##  Outer half of the sketch
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(outer_R, -height/2, 0),
+                               App.Vector(outer_R, height/2, 0)
+                            ),  False)
 
-    i_rnding_1 = Part.makeCircle(fillet_r, Base.Vector(inner_R - fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 0, 90)
-    i_rnding_2 = Part.makeCircle(fillet_r, Base.Vector(inner_r + fillet_r, 0, fillet_r), Base.Vector(0, 1, 0), 90, 180)
-    i_rnding_3 = Part.makeCircle(fillet_r, Base.Vector(inner_r + fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 180, 270)
-    i_rnding_4 = Part.makeCircle(fillet_r, Base.Vector(inner_R - fillet_r, 0, height - fillet_r), Base.Vector(0, 1, 0), 270, 360)
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(outer_R, height/2, 0),
+                               App.Vector(outer_r, height/2, 0)
+                            ),  False)
 
-    i_wire = Part.Wire([i_line_1, i_rnding_1, i_line_2, i_rnding_2, i_line_3, i_rnding_3, i_line_4, i_rnding_4])
-    i_wire = Part.Face(i_wire)
-    i_wire = i_wire.revolve(Base.Vector(0, 0, 1), Base.Vector(0, 0, 360))
-    i_circle = Part.makeCircle(ball_r, Base.Vector(ball_hoffset, 0, ball_voffset), Base.Vector(0, 1, 0), 0, 360)
-    i_circwire = Part.Wire([i_circle])
-    i_circwire = Part.Face(i_circwire)
-    i_circwire = i_circwire.revolve(Base.Vector(0, 0, 1), Base.Vector(0, 0, 360))
-    i_wire = i_wire.cut(i_circwire)
-    Part.show(i_wire)
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(outer_r, height/2, 0),
+                               App.Vector(outer_r, ball_r*math.sin(angle), 0)
+                            ),  False)
 
+    sketch_bearing.addGeometry(Part.ArcOfCircle(
+        Part.Circle(App.Vector(middle_r, 0, 0), App.Vector(0, 0, 1), ball_r),
+        -angle, angle)
+                               )
+    
 
-    for i in range(ball_amount):
-        ball = Part.makeSphere(ball_r)
-        angle = (i*2*math.pi)/ball_amount
-        ball_placement = (ball_hoffset*math.cos(angle), ball_hoffset*math.sin(angle), ball_voffset)
-        ball.translate(ball_placement)
-        Part.show(ball)
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(outer_r, -ball_r*math.sin(angle), 0),
+                               App.Vector(outer_r, -height/2, 0)
+                            ),  False)
 
-    App.ActiveDocument.recompute()
-    Gui.ActiveDocument.ActiveView.viewAxometric()
-    Gui.SendMsgToActiveView("ViewFit")
+    sketch_bearing.addGeometry(Part.LineSegment(
+                               App.Vector(outer_r, -height/2, 0),
+                               App.Vector(outer_R, -height/2, 0)
+                            ),  False)
+    ##  Outer half of the sketch end
+    sketch_bearing.Visibility   =   False
+    
+    revolveSketchZ(body, sketch_bearing)
+
+    doc.recompute()
+
+    return body
+
+def makeBearingBalls(bearing):
+    global balls
+    return
+
+def makeBearing(bearing):
+    makeBearingBody(bearing)
+    makeBearingBalls(bearing)
+'''==========================================================='''
 '''                     Modelling code end                      '''
 '''============================================================='''
 
 '''============================================================='''
 '''                Graphical user interface code                '''
+'''==========================================================='''
 class GuiClass(QtGui.QDialog):
     def __init__(self):
         super(GuiClass, self).__init__()
@@ -137,7 +190,6 @@ class GuiClass(QtGui.QDialog):
             return
         bearing = Bearing(self.ds_id.value()/2, self.ds_od.value()/2, self.ds_h.value(), self.s_b.value())
         makeBearing(bearing)
-        self.close()
 
     def onCancel(self):
         self.close()
@@ -189,12 +241,22 @@ class GuiClass(QtGui.QDialog):
         self.show()
 
 form = GuiClass()
+'''==========================================================='''
 '''               Graphical user interface end                '''
 '''==========================================================='''
+doc = App.activeDocument()
+
+if(doc is None):
+    QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
+    close()
+
+body = None
+balls = []
+
 
 try:
     last = bearing_from_json()
-   #   Reads from file.
+    #   Reads from file.
     #   Otherwise throws.
     form.ds_id.setValue(last.inner_r)
     form.ds_od.setValue(last.outer_R)
