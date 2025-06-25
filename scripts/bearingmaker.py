@@ -28,7 +28,6 @@ def bearing_from_json():
 '''==========================================================='''
 '''                     Class code end                        '''
 '''==========================================================='''
-
 '''==========================================================='''
 '''                     Modelling code                        '''
 '''==========================================================='''
@@ -145,17 +144,32 @@ def makeBearingBody(bearing):
     
     revolveSketchZ(body, sketch_bearing)
 
-    doc.recompute()
-
     return body
 
 def makeBearingBalls(bearing):
+    if(bearing.ball_amount == 0):
+        return
+    
     global balls
-    return
+    global doc
+    for i in balls:
+        doc.removeObject(i.Name)
+    balls = []
+
+    angle_step = math.pi*2/bearing.ball_amount
+    offset  =   (bearing.inner_r + bearing.outer_R)/2
+    ball_r = min((bearing.outer_R-bearing.inner_r)/2, bearing.height/2)/2       #   I could not figure out a way to avoid repeating it.
+
+    for i in range(bearing.ball_amount):
+        balls.append(doc.addObject('Part::Sphere', 'Ball_001'))
+        balls[i].Placement = App.Placement(offset*App.Vector(math.cos(angle_step*i), math.sin(angle_step*i), 0), App.Rotation(0,0,0), App.Vector(0,0,0))
+        balls[i].Radius = ball_r
+
 
 def makeBearing(bearing):
     makeBearingBody(bearing)
     makeBearingBalls(bearing)
+    doc.recompute()
 '''==========================================================='''
 '''                     Modelling code end                      '''
 '''============================================================='''
