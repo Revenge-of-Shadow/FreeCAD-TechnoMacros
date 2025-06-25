@@ -5,7 +5,7 @@ from PySide import QtGui
 filename = "last_screw.json"
 
 head_types = ["Cone", "Mushroom"]
-drive_types = ["Slit", "Frearson", "Phillips"]
+drive_types = ["Slit", "Frearson", "Phillips", "Hexagon"]
 '''==================================================================================='''
 '''                                       Class                                       '''
 '''==================================================================================='''
@@ -174,6 +174,19 @@ def makeFrearsonSketch(body, diameter, thickness):
     
     return sketch_drive
 
+def makeHexSketch(body, diameter):
+    sketch_drive = body.newObject('Sketcher::SketchObject', 'DriveSketch')
+    sketch_drive.AttachmentSupport = (doc.getObject('XY_Plane'),[''])
+    sketch_drive.MapMode = 'FlatFace'
+
+    for i in range(6):
+        sketch_drive.addGeometry(Part.LineSegment(
+                                 App.Vector(math.sin(i*(math.pi/3)), math.cos(i*(math.pi/3)), 0)*diameter/2,
+                                 App.Vector(math.sin((i+1)*(math.pi/3)), math.cos((i+1)*(math.pi/3)), 0)*diameter/2
+        ), False)
+    sketch_drive.Visibility = False
+    
+    return sketch_drive
 
 def makePhillipsSketch(body, diameter, thickness):
     sketch_drive = body.newObject('Sketcher::SketchObject', 'DriveSketch')
@@ -235,6 +248,8 @@ def makeScrew(screw):
         sketch = makeFrearsonSketch(body, screw.drive_diameter, screw.drive_thickness)
     elif(screw.drive_type == drive_types[2]):     
         sketch = makePhillipsSketch(body, screw.drive_diameter, screw.drive_thickness)
+    elif(screw.drive_type == drive_types[3]):     
+        sketch = makeHexSketch(body, screw.drive_diameter)
     if(sketch is not None):
         subtractDrive(body, sketch, screw.head_height/2)
 
