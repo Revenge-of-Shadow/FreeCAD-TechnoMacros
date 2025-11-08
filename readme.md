@@ -75,14 +75,14 @@ A program that forms cogwheels by data provided by a user.
 *   Distance between peaks: calculated value; distance between one endpoint and another. May be not quite correct with **angle offset modifier** different from 1.
 
 
-## 5. Bearing maker
+## 3. Bearing maker
 ![Bearing screenshot](./pictures/screenshots/Bearingmaker.png)
 
-### 5.1. What's this?
+### 3.1. What's this?
 A program that creates models of ball bearings.
 Code originates from https://wiki.freecad.org/Scripted_Parts:_Ball_Bearing_-_Part_2.
 
-### 5.2. What's that?
+### 3.2. What's that?
 ![Bearing dimensions](./pictures/screenshots/bearing.png)
 
 
