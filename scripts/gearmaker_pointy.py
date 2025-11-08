@@ -87,32 +87,24 @@ def makeSketch(gearwheel):
 
     points = []
     angle_step = math.pi*2/(teeth*2)
-    short_angle_step = angle_step/2 * tooth_h / outer_r
-        #   Displacement of tooth point against tooth base for perpendiculatity.
-
-    angle = -angle_step/2  # For axial symmetry "out of the box".
-
     for i in range(teeth*2):
-        angle += angle_step
+        angle = angle_step*i
        
-        if(i % 2):  # Radius without tooth, then perpendicular tooth.
-            points.append(
-                App.Vector(math.cos(angle), math.sin(angle), 0)*(outer_r - tooth_h)
-            )
-
-            points.append(
-                App.Vector(math.cos(angle + short_angle_step),
-                     math.sin(angle + short_angle_step), 0) * outer_r
-            )
+        if(angle_divider == 2):
+            if(i % 2 == 1):
+                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(outer_r-tooth_h))
+            else:
+                points.append(App.Vector(math.cos(angle), math.sin(angle), 0)*(outer_r))
         else:
-            points.append(
-                App.Vector(math.cos(angle - short_angle_step),
-                     math.sin(angle - short_angle_step), 0) * outer_r
-            )
-
-            points.append(
-                App.Vector(math.cos(angle), math.sin(angle), 0)*(outer_r - tooth_h)
-            )
+            angle_offset = angle_step/angle_divider
+            angle += angle_step/2
+            if(i % 2 == 1):
+                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(outer_r-tooth_h))
+                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(outer_r))
+            else:
+                points.append(App.Vector(math.cos(angle-angle_offset), math.sin(angle-angle_offset), 0)*(outer_r))
+                points.append(App.Vector(math.cos(angle+angle_offset), math.sin(angle+angle_offset), 0)*(outer_r-tooth_h))
+            
 
     #   I am sorry for this. I could not find any documentation to make it pretty.
     for i in range(len(points)-1):
