@@ -78,11 +78,8 @@ A program that forms cogwheels by data provided by a user.
 
 
 ## 3. Gear maker (perpendicular)
-![Perpendicular teeth screenshot](./pictures/screenshots/Gearmaker_pointy.png)
+![Perpendicular teeth screenshot](./pictures/screenshots/Gearmaker_perpendicular.png)
 Identical to the pointy version, but cogs are rectangular.
-![Mostly rectangular](./pictures/screenshots/Right-angled_cog.jpeg)
-...mostly.
-I swear, formulae are correct! I even scanned the calculations to the ./pictures/!
 
 
 
