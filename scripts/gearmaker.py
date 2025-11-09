@@ -6,26 +6,34 @@ import json
 filename = "last_gearwheel.json"
 '''==========================================================='''
 '''                       Class  code                         '''
+
+
 def obj_dict(obj):
     return obj.__dict__
 
+
 class Gearwheel:
-    def __init__(self, outer_r, inner_r, teeth, tooth_h,  angle_divider, extrusion):
-        self.outer_r =  outer_r
-        self.inner_r =  inner_r
-        self.teeth   =   teeth
+    def __init__(self, outer_r, inner_r, teeth, tooth_h, extrusion):
+        self.outer_r = outer_r
+        self.inner_r = inner_r
+        self.teeth = teeth
         self.tooth_h = tooth_h
-        self.angle_divider = angle_divider
         self.extrusion = extrusion
+
 
 def gearwheel_to_json(obj):
     with open(filename, "w") as file:
-        json.dump(obj, file, default = obj_dict)
+        json.dump(obj, file, default=obj_dict)
+
 
 def gearwheel_from_json():
     with open(filename, "r") as file:
         data = json.load(file)
-        return Gearwheel(data["outer_r"], data["inner_r"], data["teeth"], data["tooth_h"], data["angle_divider"], data["extrusion"])     
+        return Gearwheel(
+            data["outer_r"], data["inner_r"], data["teeth"], data["tooth_h"], data["extrusion"]
+        )
+
+
 '''                     Class code end                        '''
 '''==========================================================='''
 
@@ -35,15 +43,12 @@ sketch = None
 body = None
 pad = None
 doc = App.activeDocument()
-if(doc is None):
-    QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
-
 
 ##  FreeCAD object functions
 def removePrev():
-    global body 
-    global sketch 
-    global pad 
+    global body
+    global sketch
+    global pad
 
     if(pad is not None):
         doc.removeObject(pad.Name)
@@ -55,24 +60,24 @@ def removePrev():
         doc.removeObject(body.Name)
         body = None
 
+
 def makeSketch(gearwheel):
     outer_r = gearwheel.outer_r
     inner_r = gearwheel.inner_r
     teeth = gearwheel.teeth
     tooth_h = gearwheel.tooth_h
-    angle_divider = gearwheel.angle_divider
 
     removePrev()
 
-    global body 
-    global sketch 
-   
+    global body
+    global sketch
+
     body = doc.addObject('PartDesign::Body', 'gearBody')
 
     sketch = body.newObject('Sketcher::SketchObject', 'gearSketch')
     sketch.AttachmentSupport = (doc.getObject('XY_Plane'), [''])
     sketch.MapMode = 'FlatFace'
-    
+
     if(inner_r > 0):
         geoList = []
         geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), inner_r))
@@ -83,7 +88,7 @@ def makeSketch(gearwheel):
         geoList.append(Part.Circle(App.Vector(0, 0, 0), App.Vector(0, 0, 1), outer_r - inner_r))
         sketch.addGeometry(geoList, False)
         del geoList
-    
+
 
     points = []
     angle_step = math.pi*2/(teeth*2)
@@ -94,7 +99,7 @@ def makeSketch(gearwheel):
 
     for i in range(teeth*2):
         angle += angle_step
-       
+
         if(i % 2):  # Radius without tooth, then perpendicular tooth.
             points.append(
                 App.Vector(math.cos(angle), math.sin(angle), 0)*(outer_r - tooth_h)
@@ -189,24 +194,16 @@ class GuiClass(QtGui.QDialog):
     ## Utility functions end
     
     ##  Event handling
-    def onValueChanged(self):
-        #   outer radius <= tooth height + inner radius
-        if(self.ds_or.value() <= (self.ds_th.value()+self.ds_ir.value())):
-            self.is_tw.setValue(0)
-        else:
-            self.is_tw.setValue(math.tan(math.pi*2/self.is_at.value()/2)*(self.ds_or.value()-self.ds_th.value())*2)
-            self.is_td.setValue(math.tan(math.pi*2/self.is_at.value()/2)*(self.ds_or.value())*2)
-
+   
     def onOk(self):
         if(self.areValuesBad()):
             self.callInformation()
             return
 
-        gearwheel = Gearwheel(self.ds_or.value(), 
-                            self.ds_ir.value(), 
-                            self.is_at.value(), 
-                            self.ds_th.value(), 
-                            self.ds_ao.value()*2,
+        gearwheel = Gearwheel(self.ds_or.value(),
+                            self.ds_ir.value(),
+                            self.is_at.value(),
+                            self.ds_th.value(),
                             self.ds_e.value())
 
         makeGearWheel(gearwheel)
@@ -226,7 +223,6 @@ class GuiClass(QtGui.QDialog):
         self.l_or.move(20, 20)
         self.ds_or = QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(box=self.ds_or, max=1000000, min=1, step = 1, default=5)
-        self.ds_or.valueChanged[float].connect(self.onValueChanged)
         self.ds_or.setFixedWidth(80)
         self.ds_or.move(220, 20)
 
@@ -234,7 +230,6 @@ class GuiClass(QtGui.QDialog):
         self.l_ir.move(20, 70)
         self.ds_ir = QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(box=self.ds_ir, max=1000000, min=-1000000, step=1, default=1) 
-        self.ds_ir.valueChanged[float].connect(self.onValueChanged)
         self.ds_ir.setFixedWidth(80)
         self.ds_ir.move(220, 70)
 
@@ -242,7 +237,6 @@ class GuiClass(QtGui.QDialog):
         self.l_at.move(20, 120)
         self.is_at = QtGui.QSpinBox(self)
         self.setupSpinBox(box=self.is_at, max = 1000, min = 2, step = 1, default = 16) 
-        self.is_at.valueChanged[int].connect(self.onValueChanged)
         self.is_at.setFixedWidth(80)
         self.is_at.move(220, 120)
 
@@ -250,7 +244,6 @@ class GuiClass(QtGui.QDialog):
         self.l_th.move(20, 170)
         self.ds_th = QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(box=self.ds_th, max=1000, min=0, step=0.1, default=1)
-        self.ds_th.valueChanged[float].connect(self.onValueChanged)
         self.ds_th.setFixedWidth(80)
         self.ds_th.move(220, 170)
 
@@ -258,31 +251,8 @@ class GuiClass(QtGui.QDialog):
         self.l_e.move(20, 220)
         self.ds_e = QtGui.QDoubleSpinBox(self)
         self.setupSpinBox(self.ds_e, 1000000, min=-1000000, step=1, default=0) 
-        self.ds_e.valueChanged[float].connect(self.onValueChanged)
         self.ds_e.setFixedWidth(80)
         self.ds_e.move(220, 220)
-
-        self.l_ao = QtGui.QLabel("Angle offset modifier:", self)
-        self.l_ao.move(20, 270)
-        self.ds_ao = QtGui.QDoubleSpinBox(self)
-        self.setupSpinBox(self.ds_ao, 1000000, min=1, step=1, default=1) 
-        self.ds_ao.valueChanged[float].connect(self.onValueChanged)
-        self.ds_ao.setFixedWidth(80)
-        self.ds_ao.move(220, 270)
-        
-        self.l_tw = QtGui.QLabel("Tooth width [mm]:", self)
-        self.l_tw.move(20, 320)
-        self.is_tw = QtGui.QDoubleSpinBox(self)
-        self.is_tw.setFixedWidth(80)
-        self.is_tw.move(220, 320)
-        self.is_tw.setEnabled(False)
-
-        self.l_td = QtGui.QLabel("Distance between peaks [mm]:", self)
-        self.l_td.move(20, 370)
-        self.is_td = QtGui.QDoubleSpinBox(self)
-        self.is_td.setFixedWidth(80)
-        self.is_td.move(220, 370)
-        self.is_td.setEnabled(False)
         ##  Inputs and labels end
         ##  Confirm/Cancel buttons
         self.bt_ok = QtGui.QPushButton("Make the gear", self)
@@ -296,25 +266,28 @@ class GuiClass(QtGui.QDialog):
         
         self.show()
 
-form = GuiClass()
 
-try:
-    last = gearwheel_from_json()
-    #   Reads from file. 
-    #   Otherwise throws.
-    form.ds_or.setValue(last.outer_r)
-    form.ds_ir.setValue(last.inner_r)
-    form.is_at.setValue(last.teeth)
-    form.ds_th.setValue(last.tooth_h)
-    form.ds_ao.setValue(last.angle_divider)
-    form.ds_e.setValue(last.extrusion)
-    form.onValueChanged()
-except (FileNotFoundError):
-    pass    #   Default values are used.
-finally:
-    form.exec()
-    last = Gearwheel(form.ds_or.value(), form.ds_ir.value(), form.is_at.value(), form.ds_th.value(), form.ds_ao.value(), form.ds_e.value())
-    gearwheel_to_json(last)
+if (doc is None):
+    QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
+else:
+    form = GuiClass()
+
+    try:
+        last = gearwheel_from_json()
+        #   Reads from file. 
+        #   Otherwise throws.
+        form.ds_or.setValue(last.outer_r)
+        form.ds_ir.setValue(last.inner_r)
+        form.is_at.setValue(last.teeth)
+        form.ds_th.setValue(last.tooth_h)
+        form.ds_e.setValue(last.extrusion)
+        form.onValueChanged()
+    except (FileNotFoundError):
+        pass    #   Default values are used.
+    finally:
+        form.exec()
+        last = Gearwheel(form.ds_or.value(), form.ds_ir.value(), form.is_at.value(), form.ds_th.value(), form.ds_e.value())
+        gearwheel_to_json(last)
 
 '''               Graphical user interface end                '''
 '''==========================================================='''

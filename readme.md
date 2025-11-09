@@ -7,9 +7,10 @@
 
 0. Requirements
 1. Spring maker
-2. Gear maker
-3. Bearing maker 
-4. Copyleft
+2. Gear maker (pointy)
+3. Gear maker (perpendicular)
+4. Bearing maker 
+5. Copyleft
 
 
 ## 0. Requirements
@@ -55,7 +56,7 @@ Spring types:
 
 
 
-##  2. Gear maker
+##  2. Gear maker (pointy)
 ![Gear screenshot](./pictures/screenshots/Gearmaker.png)
 
 ### 2.1. What's this?
@@ -75,14 +76,24 @@ A program that forms cogwheels by data provided by a user.
 *   Distance between peaks: calculated value; distance between one endpoint and another. May be not quite correct with **angle offset modifier** different from 1.
 
 
-## 3. Bearing maker
+
+## 3. Gear maker (perpendicular)
+![Perpendicular teeth screenshot](./pictures/screenshots/Gearmaker_pointy.png)
+Identical to the pointy version, but cogs are rectangular.
+![Mostly rectangular](./pictures/screenshots/Right-angled_cog.jpeg)
+...mostly.
+I swear, formulae are correct! I even scanned the calculations to the ./pictures/!
+
+
+
+## 4. Bearing maker
 ![Bearing screenshot](./pictures/screenshots/Bearingmaker.png)
 
-### 3.1. What's this?
+### 4.1. What's this?
 A program that creates models of ball bearings.
 Code originates from https://wiki.freecad.org/Scripted_Parts:_Ball_Bearing_-_Part_2.
 
-### 3.2. What's that?
+### 4.2. What's that?
 ![Bearing dimensions](./pictures/screenshots/bearing.png)
 
 
