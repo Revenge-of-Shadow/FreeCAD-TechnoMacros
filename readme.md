@@ -119,7 +119,7 @@ Some things are limited (head and drive types). Even with that it is possible to
 
 
 ## Nut maker
-[Nut maker](./pictures/screenshots/Nutmaker.png)
+![Nut maker](./pictures/screenshots/Nutmaker.png)
 ### 6.1. What's this?
 A program that models screw nuts.
 
@@ -129,7 +129,7 @@ A program that models screw nuts.
 *   Inner diameter: true inner diameter of the nut; inner diameter of the corresponding thread.
 *   Thickness: length of the nut.
 *   Pitch multiplier: modifies the frequency of helix; "distance between the gaps".
-[Evil, very evil indeed](./pictures/screenshots/Evil_nut.png)
+![Evil, very evil indeed](./pictures/screenshots/Evil_nut.png)
 hehehehe
 
 
