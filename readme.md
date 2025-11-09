@@ -11,6 +11,7 @@
 3. Gear maker (perpendicular)
 4. Bearing maker 
 5. Screw maker
+6. Nut maker
 Copyleft
 
 
@@ -114,6 +115,22 @@ Some things are limited (head and drive types). Even with that it is possible to
 *   Curve radius: radius of the "Mushroom" curve. Not applicable to "Cone" head type.
 *   Drive type: Type of the cutout for the screwdriver. I see no need in adding all of the types I can find in the world.
 *   Drive thickness: Depth of the cutout.
+
+
+
+## Nut maker
+[Nut maker](./pictures/screenshots/Nutmaker.png)
+### 6.1. What's this?
+A program that models screw nuts.
+
+### 6.2. What's that?
+*   Outer diameter: distance between vertices.
+*   Thread diameter: "middle diameter", the outer diameter of a thread that can fit in.
+*   Inner diameter: true inner diameter of the nut; inner diameter of the corresponding thread.
+*   Thickness: length of the nut.
+*   Pitch multiplier: modifies the frequency of helix; "distance between the gaps".
+[Evil, very evil indeed](./pictures/screenshots/Evil_nut.png)
+hehehehe
 
 
 
