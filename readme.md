@@ -10,7 +10,8 @@
 2. Gear maker (pointy)
 3. Gear maker (perpendicular)
 4. Bearing maker 
-5. Copyleft
+5. Screw maker
+Copyleft
 
 
 ## 0. Requirements
@@ -94,7 +95,29 @@ Code originates from https://wiki.freecad.org/Scripted_Parts:_Ball_Bearing_-_Par
 ![Bearing dimensions](./pictures/screenshots/bearing.png)
 
 
-## 4. Copyleft
+
+## 5. Screw maker
+![Screw maker screenshot](./pictures/screenshots/Screwmaker.png)
+
+### 5.1. What's this?
+A program that forms screws by a variety of settings.
+Some things are limited (head and drive types). Even with that it is possible to create more variations that there are uses for them.
+
+### 5.2. What's that?
+*   Screw diameter: diameter of the screw thread, including the spiral (helix).
+*   Root diameter: inner diameter of the screw thread, not counting the helix. Modifications to it change the helix: the greater the root diameter, the more shallow and frequent the cutout is.
+*   Thread length: how long is the screw, not counting the head.
+*   Pitch multiplier: frequency of the negative helix. In other words, "how much distance is between the gaps.".
+
+*   Head type: shape of the head. I took the liberty to name the types myself.
+*   Head length: distance between the place where it connects to the thread and its farthest point.
+*   Curve radius: radius of the "Mushroom" curve. Not applicable to "Cone" head type.
+*   Drive type: Type of the cutout for the screwdriver. I see no need in adding all of the types I can find in the world.
+*   Drive thickness: Depth of the cutout.
+
+
+
+## Copyleft
 
 I allow usage and alternation of these scripts with or without my consent. 
 I prohibit proclaims of ownership of this code by anyone other than me.
