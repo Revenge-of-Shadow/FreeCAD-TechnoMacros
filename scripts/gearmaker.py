@@ -13,12 +13,13 @@ def obj_dict(obj):
 
 
 class Gearwheel:
-    def __init__(self, outer_r, inner_r, teeth, tooth_h, extrusion):
+    def __init__(self, outer_r, inner_r, teeth, tooth_h, extrusion, tolerance_a):
         self.outer_r = outer_r
         self.inner_r = inner_r
         self.teeth = teeth
         self.tooth_h = tooth_h
         self.extrusion = extrusion
+        self.tolerance_a = tolerance_a
 
 
 def gearwheel_to_json(obj):
@@ -30,7 +31,7 @@ def gearwheel_from_json():
     with open(filename, "r") as file:
         data = json.load(file)
         return Gearwheel(
-            data["outer_r"], data["inner_r"], data["teeth"], data["tooth_h"], data["extrusion"]
+            data["outer_r"], data["inner_r"], data["teeth"], data["tooth_h"], data["extrusion"], data["tolerance_a"]
         )
 
 
@@ -66,6 +67,7 @@ def makeSketch(gearwheel):
     inner_r = gearwheel.inner_r
     teeth = gearwheel.teeth
     tooth_h = gearwheel.tooth_h
+    tolerance_a = gearwheel.tolerance_a
 
     removePrev()
 
@@ -92,13 +94,13 @@ def makeSketch(gearwheel):
 
     points = []
     angle_step = math.pi*2/(teeth*2)
-    short_angle_step = angle_step/2 * tooth_h / outer_r
+    short_angle_step = (angle_step-tolerance_a)/2 * tooth_h / outer_r
         #   Displacement of tooth point against tooth base for perpendiculatity.
 
-    angle = -angle_step/2  # For axial symmetry "out of the box".
+    angle = -angle_step/2  + tolerance_a/2# For axial symmetry "out of the box".
 
     for i in range(teeth*2):
-        angle += angle_step
+        angle += angle_step + tolerance_a * (1 if i%2 else -1);
 
         if(i % 2):  # Radius without tooth, then perpendicular tooth.
             points.append(
@@ -204,7 +206,8 @@ class GuiClass(QtGui.QDialog):
                             self.ds_ir.value(),
                             self.is_at.value(),
                             self.ds_th.value(),
-                            self.ds_e.value())
+                            self.ds_e.value(),
+                            self.ds_ta.value())
 
         makeGearWheel(gearwheel)
 
@@ -253,6 +256,13 @@ class GuiClass(QtGui.QDialog):
         self.setupSpinBox(self.ds_e, 1000000, min=-1000000, step=1, default=0) 
         self.ds_e.setFixedWidth(80)
         self.ds_e.move(220, 220)
+
+        self.l_ta = QtGui.QLabel("Tolerance angle [rad]:", self)
+        self.l_ta.move(20, 270)
+        self.ds_ta = QtGui.QDoubleSpinBox(self)
+        self.setupSpinBox(self.ds_ta, math.pi, min=-math.pi, step=0.01, default=0) 
+        self.ds_ta.setFixedWidth(80)
+        self.ds_ta.move(220, 270)
         ##  Inputs and labels end
         ##  Confirm/Cancel buttons
         self.bt_ok = QtGui.QPushButton("Make the gear", self)
@@ -281,12 +291,12 @@ else:
         form.is_at.setValue(last.teeth)
         form.ds_th.setValue(last.tooth_h)
         form.ds_e.setValue(last.extrusion)
-        form.onValueChanged()
+        form.ds_ta.setValue(last.tolerance_a)
     except (FileNotFoundError):
         pass    #   Default values are used.
     finally:
         form.exec()
-        last = Gearwheel(form.ds_or.value(), form.ds_ir.value(), form.is_at.value(), form.ds_th.value(), form.ds_e.value())
+        last = Gearwheel(form.ds_or.value(), form.ds_ir.value(), form.is_at.value(), form.ds_th.value(), form.ds_e.value(), form.ds_ta.value())
         gearwheel_to_json(last)
 
 '''               Graphical user interface end                '''

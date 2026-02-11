@@ -76,6 +76,7 @@ A program that forms cogwheels by data provided by a user.
 
 *   Tooth width: calculated value corresponding to the tooth base width. Is not correct when **angle offset modifier** is not 1.
 *   Distance between peaks: calculated value; distance between one endpoint and another. May be not quite correct with **angle offset modifier** different from 1.
+*   Tolerance angle: an angle to widen the gap in relation to the cog. Can even be negative... WAIT! NO, DO NOT TRY IT!
 
 
 
