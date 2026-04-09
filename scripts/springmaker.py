@@ -377,7 +377,7 @@ try:
         form.rb_cent_circle.toggle()
     form.springtype = last.mode
 
-except (FileNotFoundError, pyException):
+except (FileNotFoundError, Exception):
     pass    #   Default values are used.
 finally:
     form.exec()
