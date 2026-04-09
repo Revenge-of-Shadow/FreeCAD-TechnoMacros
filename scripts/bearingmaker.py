@@ -51,10 +51,10 @@ def revolveSketchZ(body, sketch):
     return revolution
 
 
-def makeBearingBody(bearing):
-    global body
+def makeBearingBodyI(bearing):
+    global body_i
     global doc
-    body    =   remakeBody(doc, body)
+    body_i    =   remakeBody(doc, body_i)
 
     inner_r = bearing.inner_r
     outer_R = bearing.outer_R
@@ -69,82 +69,109 @@ def makeBearingBody(bearing):
     outer_r = middle_r+ball_r/2
 
 
-    sketch_bearing  =   body.newObject('Sketcher::SketchObject', 'BearingSketch')
-    sketch_bearing.AttachmentSupport    =   (doc.getObject('XZ_Plane'), [''])
-    sketch_bearing.MapMode  =   'FlatFace'
+    sketch_bearing_i  =   body_i.newObject('Sketcher::SketchObject', 'BearingSketch')
+    sketch_bearing_i.AttachmentSupport    =   (doc.getObject('XZ_Plane'), [''])
+    sketch_bearing_i.MapMode  =   'FlatFace'
 
     angle  =    math.acos((outer_r - middle_r)/ball_r)
 
     ##  Inner half of the sketch
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_i.addGeometry(Part.LineSegment(
                                App.Vector(inner_r, -height/2, 0),
                                App.Vector(inner_r, height/2, 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_i.addGeometry(Part.LineSegment(
                                App.Vector(inner_r, height/2, 0),
                                App.Vector(inner_R, height/2, 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_i.addGeometry(Part.LineSegment(
                                App.Vector(inner_R, height/2, 0),
                                App.Vector(inner_R, ball_r*math.sin(angle), 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.ArcOfCircle(
+    sketch_bearing_i.addGeometry(Part.ArcOfCircle(
         Part.Circle(App.Vector(middle_r, 0, 0), App.Vector(0, 0, 1), ball_r),
         math.pi-angle, math.pi+angle)
                                )
     
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_i.addGeometry(Part.LineSegment(
                                App.Vector(inner_R, -ball_r*math.sin(angle), 0),
                                App.Vector(inner_R, -height/2, 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_i.addGeometry(Part.LineSegment(
                                App.Vector(inner_R, -height/2, 0),
                                App.Vector(inner_r, -height/2, 0)
                             ),  False)
-    ##  Inner half of the sketch end
+
+    sketch_bearing_i.Visibility   =   False
+    revolveSketchZ(body_i, sketch_bearing_i)
+
+    return body_i
+
+def makeBearingBodyO(bearing):
+    global body_o
+    global doc
+    body_o    =   remakeBody(doc, body_o)
+
+    inner_r = bearing.inner_r
+    outer_R = bearing.outer_R
+    height = bearing.height
+    ball_amount = bearing.ball_amount
+
+    ball_r = min((outer_R-inner_r)/2, height/2)/2
+
+    middle_r = (inner_r + outer_R)/2
+
+    inner_R = middle_r-ball_r/2
+    outer_r = middle_r+ball_r/2
+    angle  =    math.acos((outer_r - middle_r)/ball_r)
+
+    sketch_bearing_o  =   body_o.newObject('Sketcher::SketchObject', 'BearingSketch')
+    sketch_bearing_o.AttachmentSupport    =   (doc.getObject('XZ_Plane'), [''])
+    sketch_bearing_o.MapMode  =   'FlatFace'
 
     ##  Outer half of the sketch
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_o.addGeometry(Part.LineSegment(
                                App.Vector(outer_R, -height/2, 0),
                                App.Vector(outer_R, height/2, 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_o.addGeometry(Part.LineSegment(
                                App.Vector(outer_R, height/2, 0),
                                App.Vector(outer_r, height/2, 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_o.addGeometry(Part.LineSegment(
                                App.Vector(outer_r, height/2, 0),
                                App.Vector(outer_r, ball_r*math.sin(angle), 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.ArcOfCircle(
+    sketch_bearing_o.addGeometry(Part.ArcOfCircle(
         Part.Circle(App.Vector(middle_r, 0, 0), App.Vector(0, 0, 1), ball_r),
         -angle, angle)
                                )
     
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_o.addGeometry(Part.LineSegment(
                                App.Vector(outer_r, -ball_r*math.sin(angle), 0),
                                App.Vector(outer_r, -height/2, 0)
                             ),  False)
 
-    sketch_bearing.addGeometry(Part.LineSegment(
+    sketch_bearing_o.addGeometry(Part.LineSegment(
                                App.Vector(outer_r, -height/2, 0),
                                App.Vector(outer_R, -height/2, 0)
                             ),  False)
     ##  Outer half of the sketch end
-    sketch_bearing.Visibility   =   False
+    sketch_bearing_o.Visibility   =   False
     
-    revolveSketchZ(body, sketch_bearing)
+    revolveSketchZ(body_o, sketch_bearing_o)
 
-    return body
+    return body_o
+
 
 def makeBearingBalls(bearing):
     if(bearing.ball_amount == 0):
@@ -167,7 +194,8 @@ def makeBearingBalls(bearing):
 
 
 def makeBearing(bearing):
-    makeBearingBody(bearing)
+    makeBearingBodyI(bearing)
+    makeBearingBodyO(bearing)
     makeBearingBalls(bearing)
     doc.recompute()
 '''==========================================================='''
@@ -264,7 +292,8 @@ if(doc is None):
     QtGui.QMessageBox.information(None, "No nya", "Select a document first.")
     close()
 
-body = None
+body_i = None
+body_o = None
 balls = []
 
 
